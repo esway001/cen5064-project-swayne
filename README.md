@@ -1,4 +1,4 @@
-# [Your Project Name]
+# [Heist]
 
 <!-- CI badge: after Session 4, replace ORG/REPO and the workflow filename, then uncomment:
 ![CI](https://github.com/ORG/REPO/actions/workflows/ci.yml/badge.svg)
@@ -8,8 +8,14 @@
 
 ## Project (approval paragraph — write this by Sun Aug 30)
 
-[One paragraph: What is the system? Who is it for? What are its 3–4 core features?
-This paragraph is your approval request — see the Project Brief, Section 2.]
+I propose developing a small 3D multiplayer heist game that runs in a web browser. This application allows a group to connect to a shared game session,
+interact with a 3D environment, coordinate, complete objectives, and escape from the place. The technology used will be Three.js/Javascript on the
+client, using ASP.NET Core/C# for the server, SignalR for real-time communication, and Supabase/PostgreSQL for persistence and authentication. The 
+main focus is software architecture and design patterns, not gameplay or art. The architecture will be layered with a separation between presentation,
+application, domain, and data/infrastructure. The design principles will be SOLID, dependency inversion, and the use of design patterns such as SignalR behind a 
+transport/session interface. The game will be small enough to finish, with a focus on use cases such as joining sessions, synched movements, interaction, and
+objective completion. Testing will be demonstrable with local tests and multiplayer through at least two browser tabs or simulated clients. My personal 
+motivations include a desire to strengthen my Three.js and 3D web dev skills, working with a familiar tech stack, and creating a fun multiplayer experience.
 
 ## How to run
 

@@ -19,10 +19,28 @@ venv/
 .vscode/
 *.iml
 
+# Visual Studio
+.vs/
+*.user
+*.suo
+
+# Build output
+bin/
+obj/
+
+# Node
+node_modules/
+
+# Environment / secrets
+.env
+.env.*
+!.env.example
+
+
 # --- OS noise ---
 .DS_Store
 Thumbs.db
 
 # --- Local secrets/config (never commit credentials) ---
-.env
+
 *.local
