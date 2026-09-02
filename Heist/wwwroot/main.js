@@ -2,6 +2,7 @@
 //import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js'; //Don't need yet
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 
+const playerName = sessionStorage.getItem('playerName') ?? "Anon";
 const scene = new THREE.Scene();
 const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 100);
 
@@ -26,16 +27,17 @@ const connection = new signalR.HubConnectionBuilder()
     .withAutomaticReconnect()
     .build();
 
-connection.on("Welcome", (me, roster) => roster.forEach(spawnBox));
+connection.on("Welcome", (me, roster) => { console.log('Welcome to the Game', me, roster); roster.forEach(spawnBox) });
 connection.on("PlayerJoined", (payload) => { console.log("Joined Player, read payload: ", payload); spawnBox(payload); });
 connection.on("PlayerLeft", (id) => {
+    console.log('player left', id);
     const mesh = players.get(id);
     if (mesh) { scene.remove(mesh); players.delete(id); }
 });
 
 await connection.start();
 //await connection.invoke("Join", playerName);
-await connection.invoke("Join", "testName");
+await connection.invoke("Join", playerName);
 
 //render loop
 function animate() {
