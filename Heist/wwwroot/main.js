@@ -21,8 +21,15 @@ const net = new NetworkClient("/gameHub");
 net.onWelcome((me, roster) => roster.forEach(p => sceneManager.addPlayer(p)));
 net.onPlayerJoined(p => sceneManager.addPlayer(p));
 net.onPlayerLeft(id => sceneManager.removePlayer(id));
+//debug log
+//net.onSnapshot(snap => console.log(snap));
 
-net.onSnapshot(snap => console.log(snap));
+/* snap is players array
+*/
+net.onSnapshot(snap => {
+    //console.log('snapshot', snap);
+    sceneManager.applySnapshot(snap);
+});
 
 window.addEventListener('resize', () => sceneManager.onWindowResize());
 

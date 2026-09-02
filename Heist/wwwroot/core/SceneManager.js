@@ -72,5 +72,14 @@ export class SceneManager {
         const mesh = this.players.get(id);
         if (mesh) { this.scene.remove(mesh); this.players.delete(id); }
     }
+
+    //This method will take the intent from the snapshot positions and apply to the mesh
+    applySnapshot(players) {
+        for (const p of players) {
+            const mesh = this.players.get(p.id);
+            console.log(p.id.slice(0, 4), "x:", p.x, "z:", p.z, "mesh?", !!mesh);
+            if (mesh) mesh.position.set(p.x, p.y, p.z);
+        }
+    }
 };
 
