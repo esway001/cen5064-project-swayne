@@ -14,6 +14,8 @@ builder.Services.AddSignalR().AddJsonProtocol( o=>
     o.PayloadSerializerOptions.PropertyNamingPolicy = System.Text.Json.JsonNamingPolicy.CamelCase);
     //JSON protocol helps with casing
 builder.Services.AddSingleton<GameRegistry>();
+builder.Services.AddHostedService<GameLoop>();
+
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.

@@ -12,4 +12,12 @@
         await this.connection.start();
         await this.connection.invoke("Join", name);
     }
+
+    sendInput(cmd) {
+        if (this.connection.state === signalR.HubConnectionState.Connected) {
+            this.connection.invoke("SendInput", cmd);
+        }
+    }
+
+    onSnapshot(cb) { this.connection.on("Snapshot", cb); }
 }

@@ -27,4 +27,11 @@ public class GameHub: Hub
         await Clients.Others.SendAsync("PlayerLeft", Context.ConnectionId);
         await base.OnDisconnectedAsync(ex);
     }
+
+    public void SendInput(InputCommand cmd)
+    {
+        _registry.SetInput(Context.ConnectionId, cmd);
+        //For test purposes
+        //Console.WriteLine($"input from {Context.ConnectionId[..4]}: seq={cmd.Seq} x={cmd.X} z={cmd.Z}");
+    }
 }
