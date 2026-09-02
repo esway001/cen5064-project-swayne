@@ -29,12 +29,13 @@ instructor will follow it literally on conference days.]
 
 ### Tier breakdown (Session 2 studio)
 
-| Tier | Responsibilities in THIS system |
-|------|--------------------------------|
-| Presentation | [what your UI layer does] |
-| Service | [what your use-case/orchestration layer does] |
-| Domain | [your entities and business rules] |
-| Data | [how and where data is stored] |
+| Tier | Responsibilities in THIS system | Example Classes/Modules |
+|------|--------------------------------|------------|
+| Presentation | <ul><li>Displays interactable menu (dialog.js)<li> renders the scene<li> loads models and graphics |<ul><li> SceneManager.js<li> ModelLoader.js<li> Dialog.js<li> LevelLoader.js |
+| Service | <ul><li>Sign-in and Out with validation tokens signed by Supabase<li> load player profile and player level layouts<li> match making   | <ul><li>AuthService.EnsureProfile<li> AuthService.SignOut<li> PlayerProfileService.GetPlayableLevels<li> PlayerProfileService.GetLevelParams()<li> MatchResultService.RecordResult()   |
+| Domain | <ul><li>trigger a trap by doing A<li> complete the objective by interacting with object B and escaping through plane C<li> the collision rules for the capsules of the players to determine touch and interaction<li> interface that contracts the storing and getting match results <li> interface that stores and retrieves player profiles  | <ul><li>MovementRules.cs<li> CompletionPolicy.cs<li> TrapResolver.cs<li> IMatchResultRepo.cs<li> IPlayerProfileRepo.cs |
+| Data | <ul><li>match result table (with winner, time, completion; history)<li> statistics readable<li> score per-level the best times<li> playerprofiles | <ul><li>MatchResultRepo.cs<li> StatisticsRepo.cs<li> LeaderboardRepo.cs<li> PlayerProfileRepo.cs  |
+
 
 ### C4 — Context & Container (Session 3 studio)
 
