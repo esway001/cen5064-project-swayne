@@ -20,6 +20,9 @@ app.UseHttpsRedirection();
 
 app.UseAuthorization();
 
+app.UseDefaultFiles(); //lets use index.html for root
+app.UseStaticFiles();   //serve wwwroot folder
+
 app.MapControllers();
 
 app.Run();
