@@ -12,6 +12,11 @@ public class GameHub: Hub
     {
         //SendAsync("eventName", data) sends msg to client with event name/data. Client listens for event and handles data accordingly.
         var me = _registry.Add(Context.ConnectionId, name); //context.connectId is temp player id
+        if (me is null)
+        {
+            await Clients.Caller.SendAsync("Rejected", "Game is full");
+            return;
+        }
         await Clients.Caller.SendAsync("Welcome", me, _registry.All); // Show current state to new player
         await Clients.Others.SendAsync("PlayerJoined", me); // make accouncement to all
     }

@@ -1,4 +1,27 @@
-﻿body {
+﻿html, body {
     margin:0;
+    height: 100%;
+    overflow: hidden;
     padding:0;
+    background-color: black;
+}
+#heist-canvas {
+    background: var(--scene-bg, var(--bg));
+    display: block;
+    width: 100vw;
+    height: 100vh;
+}
+.bar-logo {
+    color: aliceblue;
+}
+.bar-title, .bar-subtitle {
+    color: lightgreen;
+}
+
+.horizontal-line {
+    border-top: 4px solid lightgreen;
+    width: 95%;
+    margin: 60px auto;
+    background: transparent;
+    
 }

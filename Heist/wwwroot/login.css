@@ -1,0 +1,32 @@
+﻿body {
+    display: flex;
+    flex-direction: column;
+    min-height: 100dvh;
+    margin: 5rem;
+    padding: 0;
+    background-color: black;
+    font-family: 'Franklin Gothic Medium', 'Arial Narrow', Arial, sans-serif;
+    color: lightgreen;
+}
+
+main {
+    flex-grow: 1;
+}
+h3 {
+    padding: 0rem 10rem;
+}
+
+form {
+    padding: 2rem 12rem;
+    border: 6px double lightgreen;
+    border-radius:15px;
+    padding:10px;
+}
+
+h1 {
+    font-family:'Bookman Old Style';
+    padding: 1rem 2rem;
+}
+.text-muted small {
+    color: aliceblue;
+}

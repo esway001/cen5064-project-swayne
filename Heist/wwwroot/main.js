@@ -1,54 +1,43 @@
-﻿import * as THREE from 'three';
+﻿import { SceneManager } from './core/SceneManager.js';
+import { NetworkClient } from './net/NetworkClient.js';
 //import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js'; //Don't need yet
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 
 const playerName = sessionStorage.getItem('playerName') ?? "Anon";
-const scene = new THREE.Scene();
-const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 100);
+//target canvas element
+const myCanvas = document.querySelector('#heist-canvas');
 
-const renderer = new THREE.WebGLRenderer();
-renderer.setSize(window.innerWidth, window.innerHeight);
-renderer.setAnimationLoop(animate);
-document.body.appendChild(renderer.domElement);
+//init scenemanager
+const sceneManager = new SceneManager(myCanvas);
+const controls = new OrbitControls(sceneManager.camera, sceneManager.renderer.domElement);
 
-const geometry = new THREE.BoxGeometry(1,1,1);
-const material = new THREE.MeshBasicMaterial({ color: 0x550033 });
-const cube = new THREE.Mesh(geometry, material);
-//scene.add(cube);
+//Network Methods
+const net = new NetworkClient("/gameHub");
+net.onWelcome((me, roster) => roster.forEach(p => sceneManager.addPlayer(p)));
+net.onPlayerJoined(p => sceneManager.addPlayer(p));
+net.onPlayerLeft(id => sceneManager.removePlayer(id));
 
-camera.position.z = 5;
-const controls = new OrbitControls(camera, renderer.domElement);
 
-//Here we are gonna create players
-const players = new Map(); //map of players, key is player id, value is object with player data
+window.addEventListener('resize', () => sceneManager.onWindowResize());
 
-const connection = new signalR.HubConnectionBuilder()
-    .withUrl("/gameHub")
-    .withAutomaticReconnect()
-    .build();
 
-connection.on("Welcome", (me, roster) => { console.log('Welcome to the Game', me, roster); roster.forEach(spawnBox) });
-connection.on("PlayerJoined", (payload) => { console.log("Joined Player, read payload: ", payload); spawnBox(payload); });
-connection.on("PlayerLeft", (id) => {
-    console.log('player left', id);
-    const mesh = players.get(id);
-    if (mesh) { scene.remove(mesh); players.delete(id); }
-});
-
-await connection.start();
-//await connection.invoke("Join", playerName);
-await connection.invoke("Join", playerName);
+// connection.on("Welcome", (me, roster) => { console.log('Welcome to the Game', me, roster); roster.forEach(spawnBox) });
+// connection.on("PlayerJoined", (payload) => { console.log("Joined Player, read payload: ", payload); spawnBox(payload); });
+// connection.on("PlayerLeft", (id) => {
+//     console.log('player left', id);
+//     const mesh = players.get(id);
+//     if (mesh) { scene.remove(mesh); players.delete(id); }
+// });
 
 //render loop
 function animate() {
-    renderer.render(scene, camera);
+    requestAnimationFrame(animate);
+    controls.update();
+
+    //update scenemanager
+    sceneManager.update();
 }
 
-function spawnBox(p) {
-    const newMat = new THREE.MeshBasicMaterial({ color: 0xff0000 });
-    const mesh = new THREE.Mesh(geometry, newMat);
-    mesh.position.set(p.x, p.y, p.z);
-    
-    scene.add(mesh);
-    players.set(p.id, mesh);
-}
+animate();
+
+await net.join(playerName);

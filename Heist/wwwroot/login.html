@@ -3,20 +3,28 @@
 <head>
     <meta charset="utf-8" />
     <title>Heist Login</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-sRIl4kxILFvY47J16cr9ZwB07vP4J8+LH7qKQnuqkuIAvNWLzeN8tE5YBujZqJLB" crossorigin="anonymous">
+    <link rel="stylesheet" href="login.css" />
 </head>
 <body>
-    <h1>Login</h1>
-    <form id="loginForm">
-        <label for="username">username:</label>
-        <input type="text" id="username" name="username" required />
-        <br />
-        <!--
-        <label for="password">Password:</label>
-        <input type="password" id="password" name="password" required />
-        <br />
-            -->
-        <button type="button" id="submitButton">Login</button>
-    </form>
-    <script type="module" src="login.js"></script>
+    <header>
+        <h1>Heist</h1>
+        <h3>Login</h3>
+    </header>
+    <main>
+        <form>
+            <div class="form-group">
+                <label for="username">Username</label>
+                <input type="text" class="form-control" id="username" aria-describedby="userHelp" />
+                <small id="userHelp" class="form-text text-muted">Username is used to log in and acts as player name</small>
+            </div>
+            <button type="button" id="submitButton" class="btn btn-primary">Login</button>
+        </form>
+        <script type="module" src="login.js"></script>
+    </main>
+    <footer>
+        <p>Developed by: Enzo Swayne</p>
+    </footer>
 </body>
+
 </html>
