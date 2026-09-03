@@ -18,7 +18,11 @@ const controls = new OrbitControls(sceneManager.camera, sceneManager.renderer.do
 
 //Network Methods
 const net = new NetworkClient("/gameHub");
-net.onWelcome((me, roster) => roster.forEach(p => sceneManager.addPlayer(p)));
+net.onWelcome((me, roster) => {
+    sceneManager.myId = me.id;
+    roster.forEach(p => sceneManager.addPlayer(p))
+});
+net.onSnapshot(snap => sceneManager.receiveSnapshot(snap));
 net.onPlayerJoined(p => sceneManager.addPlayer(p));
 net.onPlayerLeft(id => sceneManager.removePlayer(id));
 //debug log
