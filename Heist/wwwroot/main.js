@@ -4,8 +4,10 @@ import { NetworkClient } from './net/NetworkClient.js';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 
 import { InputController } from './input/InputController.js';
+import { applyInput } from './shared/movement.js';
 const input = new InputController();
-
+let predicted = { x: 0, z: 0 };
+let pending = [];
 let last = "";
 
 const playerName = sessionStorage.getItem('playerName') ?? "Anon";
@@ -20,9 +22,10 @@ const controls = new OrbitControls(sceneManager.camera, sceneManager.renderer.do
 const net = new NetworkClient("/gameHub");
 net.onWelcome((me, roster) => {
     sceneManager.myId = me.id;
+    predicted = { x: me.x, z: me.z }; //seed on spawn the predictions
     roster.forEach(p => sceneManager.addPlayer(p))
 });
-net.onSnapshot(snap => sceneManager.receiveSnapshot(snap));
+
 net.onPlayerJoined(p => sceneManager.addPlayer(p));
 net.onPlayerLeft(id => sceneManager.removePlayer(id));
 //debug log
@@ -31,8 +34,14 @@ net.onPlayerLeft(id => sceneManager.removePlayer(id));
 /* snap is players array
 */
 net.onSnapshot(snap => {
-    //console.log('snapshot', snap);
-    sceneManager.applySnapshot(snap);
+    const me = snap.find(p => p.id === sceneManager.myId);
+    if (me) {
+        predicted = { x: me.x, z: me.z };                   //1. snap to recieved server pos
+        pending = pending.filter(c => c.seq > me.lastSeq);  //2. drop our acknowledged seq
+        for (const c of pending) predicted = applyInput(predicted, c); //3. replay
+        sceneManager.setSelf(predicted);
+    }
+    sceneManager.receiveSnapshot(snap); //remotes
 });
 
 window.addEventListener('resize', () => sceneManager.onWindowResize());
@@ -51,11 +60,21 @@ function animate() {
 }
 
 animate();
+let seq = 0;
+// setInterval(() => {
+//     const { x, z } = input.getIntent();
+//     net.sendInput({ seq: seq++, x, z });
+// }, 50);
 
+/**Update intent intervals function to prediction on input function*/
+setInterval(() => {
+    const intent = input.getIntent();
+    const cmd = { seq: seq++, x: intent.x, z: intent.z };
+    pending.push(cmd);
+    predicted = applyInput(predicted, cmd); //prediction
+    sceneManager.setSelf(predicted);        //move box instantly
+    net.sendInput(cmd);
+}, 50);
 await net.join(playerName);
 
-let seq = 0;
-setInterval(() => {
-    const { x, z } = input.getIntent();
-    net.sendInput({ seq: seq++, x, z });
-}, 50);
+

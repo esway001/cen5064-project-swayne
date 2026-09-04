@@ -13,6 +13,7 @@ export class SceneManager {
         this.players = new Map();
         this.buffers = new Map();   //player list of timestamp samples
         this.myId = null;
+        this.selfTarget = null;
     }
 
     /**
@@ -74,6 +75,14 @@ export class SceneManager {
 
         }
 
+        //self smoothing
+        const selfMesh = this.players.get(this.myId);
+        if (selfMesh && this.selfTarget) {
+            const k = 0.3;  //snappy smoothing, 0 no smooth, 1 instant snap, lets test out different numbers
+            // formula better for later k = 1 - Math.exp(-12 * dt)
+            selfMesh.position.x += (this.selfTarget.x - selfMesh.position.x) * k;
+            selfMesh.position.z += (this.selfTarget.z - selfMesh.position.z) * k;
+        }
         //Render Scene
         this.renderer.render(this.scene, this.camera);
     }
@@ -110,23 +119,30 @@ export class SceneManager {
         if (mesh) { this.scene.remove(mesh); this.players.delete(id); }
     }
 
-    //This method will take the intent from the snapshot positions and apply to the mesh
-    applySnapshot(players) {
-        for (const p of players) {
-            const mesh = this.players.get(p.id);
-            console.log(p.id.slice(0, 4), "x:", p.x, "z:", p.z, "mesh?", !!mesh);
-            if (mesh) mesh.position.set(p.x, p.y, p.z);
-        }
+    setSelf(pos) {
+        //store target instead
+        this.selfTarget = { x: pos.x, z: pos.z };
     }
+
+    //This method will take the intent from the snapshot positions and apply to the mesh [UPDATE, NO LONGER CALLED]
+    // applySnapshot(players) {
+    //     for (const p of players) {
+    //         const mesh = this.players.get(p.id);
+    //         console.log(p.id.slice(0, 4), "x:", p.x, "z:", p.z, "mesh?", !!mesh);
+    //         if (mesh) mesh.position.set(p.x, p.y, p.z);
+    //     }
+    // }
 
     receiveSnapshot(players) {
         const t = performance.now();
         for (const p of players) {
-            if (p.id === this.myId) {                       //snapshot of self
+            if (p.id === this.myId) continue;
+            /*{                       //snapshot of self
+                console.log("self lastSeq:", p.lastSeq, "pos:", p.x.toFixed(2), p.z.toFixed(2)); //see last seq rounded to two digits
                 const mesh = this.players.get(p.id);
                 if (mesh) mesh.position.set(p.x, p.y, p.z);
                 continue;
-            }
+            }*/
             let buf = this.buffers.get(p.id);               //store timestamp
             if (!buf) { buf = []; this.buffers.set(p.id, buf); }
             buf.push({ t, x: p.x, y: p.y, z: p.z });

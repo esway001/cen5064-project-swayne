@@ -20,7 +20,7 @@ public class GameRegistry
             int number = Enumerable.Range(1, MaxPlayers).FirstOrDefault(n => !taken.Contains(n));
             if (number == 0) return null;                   //too many players, reject attempt
 
-            var p = new Player(connId, name, number, (number - 1) * 2f, 0f, 0f);
+            var p = new Player(connId, name, number, (number - 1) * 2f, 0f, 0f, 0);
             _players[connId] = p;
             return p;
         }
@@ -34,11 +34,13 @@ public class GameRegistry
 
     public void SetInput(string connId, InputCommand cmd) => _inputs[connId] = cmd;
 
+    //IF MAKE CHANGES ON STEP, MATCH IN SHARED\MOVEMENT.JS
     public void Step(float dt)
     {
         foreach (var (id, p) in _players)
         {
             var input = _inputs.GetValueOrDefault(id);
+            uint seq = input?.Seq ?? p.LastSeq; //save input seq
             float ix = input?.X ?? 0f;
             float iz = input?.Z ?? 0f;
 
@@ -49,7 +51,7 @@ public class GameRegistry
             float newX = p.X + ix * Speed * dt;
             float newZ = p.Z + iz * Speed * dt;
 
-            _players[id] = p with { X = newX, Z = newZ };
+            _players[id] = p with { X = newX, Z = newZ, LastSeq = seq };
         }
     }
 }
