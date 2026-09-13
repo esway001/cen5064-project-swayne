@@ -5,6 +5,7 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 
 import { InputController } from './input/InputController.js';
 import { applyInput } from './shared/movement.js';
+import { WALLS } from './shared/level.js';
 const input = new InputController();
 let predicted = { x: 0, z: 0 };
 let pending = [];
@@ -16,6 +17,7 @@ const myCanvas = document.querySelector('#heist-canvas');
 
 //init scenemanager
 const sceneManager = new SceneManager(myCanvas);
+sceneManager.buildLevel(WALLS);
 const controls = new OrbitControls(sceneManager.camera, sceneManager.renderer.domElement);
 
 //Network Methods
@@ -38,7 +40,7 @@ net.onSnapshot(snap => {
     if (me) {
         predicted = { x: me.x, z: me.z };                   //1. snap to recieved server pos
         pending = pending.filter(c => c.seq > me.lastSeq);  //2. drop our acknowledged seq
-        for (const c of pending) predicted = applyInput(predicted, c); //3. replay
+        for (const c of pending) predicted = applyInput(predicted, c, WALLS); //3. replay
         sceneManager.setSelf(predicted);
     }
     sceneManager.receiveSnapshot(snap); //remotes
@@ -71,7 +73,7 @@ setInterval(() => {
     const intent = input.getIntent();
     const cmd = { seq: seq++, x: intent.x, z: intent.z };
     pending.push(cmd);
-    predicted = applyInput(predicted, cmd); //prediction
+    predicted = applyInput(predicted, cmd, WALLS); //prediction
     sceneManager.setSelf(predicted);        //move box instantly
     net.sendInput(cmd);
 }, 50);

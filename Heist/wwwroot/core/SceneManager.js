@@ -114,6 +114,20 @@ export class SceneManager {
         this.players.set(p.id, mesh);
     }
 
+    buildLevel(walls) {
+        for (const w of walls) {
+            const width = w.maxX - w.minX;
+            const depth = w.maxZ = w.minZ;
+            const mesh = new THREE.Mesh(
+                new THREE.BoxGeometry(width, 2, depth),
+                new THREE.MeshBasicMaterial({ color: 0x888888 })
+            );
+            mesh.position.set((w.minX + w.maxX) / 2, 0, (w.minZ + w.maxZ) / 2);
+            
+            this.scene.add(mesh);
+        }
+    }
+
     removePlayer(id) {
         const mesh = this.players.get(id);
         if (mesh) { this.scene.remove(mesh); this.players.delete(id); }
