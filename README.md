@@ -67,13 +67,30 @@ flowchart TB
 ```
 
 ```mermaid
-%% Container view: your containers should match the tier table above.
-flowchart TB
-    subgraph YourSystem [Your System]
-        ui[Web UI / CLI<br/>Presentation] --> api[Application / Service]
-        api --> domain[Domain Model]
-        domain --> db[(Database<br/>Data tier)]
+flowchart LR
+    player([Player, 2-4, web browser]) -->|WebSocket/SignalR<br/>inputs up, snapshots down| spa
+    player -->|HTTP<br/>static files now, REST later| spa
+
+    subgraph HeistSystem [Heist Game - Your System]
+        spa[Browser SPA<br/>Presentation]
+        spa -->|WebSocket calls| gameserver
+        spa -->|HTTP calls| gameserver
+        gameserver[Game Server<br/>Service + Domain<br/>ASP.NET monolith]
     end
+
+    spa -->|logs in via| db[(Supabase Auth - External)]
+    gameserver -->|read/write, planned| db
+    spa -->|loads libraries from| dbJS[(CDNs/jsDelivr - External)]
+
+    classDef person fill:#d4edda,stroke:#28a745,color:#155724
+    classDef presentation fill:#dae8fc,stroke:#6c8ebf,color:#1a3a5c
+    classDef appdomain fill:#a9c4e8,stroke:#4a76b8,color:#1a3a5c
+    classDef data fill:#b3d9f7,stroke:#3a7ebf,color:#1a3a5c
+
+    class player person
+    class spa presentation
+    class gameserver appdomain
+    class db,dbJS data
 ```
 
 ### UML — Class & Sequence (Session 3 studio)
