@@ -59,10 +59,16 @@ instructor will follow it literally on conference days.]
 ### C4 — Context & Container (Session 3 studio)
 
 ```mermaid
-%% Replace this placeholder with YOUR system's context diagram.
 flowchart TB
-    user([User]) -->|uses| system[Your System]
-    system -->|stores data in| db[(Database)]
+    user([Player]) -->|logs in| system[Heist]
+    system-->|Authenticates via|db{ES SupaBase authorizes}
+    db -- Yes --> system
+    db -- No --> systemDenial[Denied entry]
+    system -->|hosted via| server[ES Azure DevOps]
+
+    subgraph Note [Abbr]
+        N1[ES = External System]
+    end
 ```
 
 ```mermaid
