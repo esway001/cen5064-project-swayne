@@ -60,15 +60,10 @@ instructor will follow it literally on conference days.]
 
 ```mermaid
 flowchart TB
-    user([Player]) -->|logs in| system[Heist]
-    system-->|Authenticates via|db{ES SupaBase authorizes}
-    db -- Yes --> system
-    db -- No --> systemDenial[Denied entry]
-    system -->|hosted via| server[ES Azure DevOps]
-
-    subgraph Note [Abbr]
-        N1[ES = External System]
-    end
+    user([Player, 2-4, web browser]) -->|plays, sends token| system[Heist]
+    system-->|read/write|db[(Supabase Auth - External)]
+    user-->|logs in via|db[(Supabase Auth - External)]
+    user-->|loads libraries from| dbJS[(CDNs/JsDeliver - External)]
 ```
 
 ```mermaid
