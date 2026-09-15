@@ -96,28 +96,68 @@ flowchart LR
 ### UML — Class & Sequence (Session 3 studio)
 
 ```mermaid
-%% Class diagram: your 3–4 core domain classes.
-classDiagram
-    class ExampleEntity {
-        -id: Long
-        -name: String
-        +doSomething()
+classDiagram 
+    class Player {
+        -GUID Id
+        -string Name
+        -int Number
+        -float X
+        -float Y
+        -float Z
+        -int LastSeq
     }
+
+    class Match {
+        -GUID Id
+        -DateTime StartedAt
+        -DateTime? EndedAt
+        -List~GUID~ PlayerIds
+        +IsComplete() bool
+        +Duration() TimeSpan
+    }
+
+    class Level {
+        <<static>>
+        +PlayerRadius : float
+        +Walls : List~Wall~
+    }
+
+    class Wall {
+        <<record>>
+        +MinX : float
+        +MaxX : float
+        +MinZ : float
+        +MaxZ : float
+    }
+
+    class PlayerProfile {
+        -GUID UserId
+        -string DisplayName
+        -int MatchesPlayed
+        -int MatchesWon
+        +WinRate() float
+    }
+
+    Match "1" --> "2..4" Player : consists of
+    Match "1" --> "1" Level : played on
+    Level "1" --> "*" Wall : contains
+    PlayerProfile "1" --> "0..*" Match : history
 ```
 
 ```mermaid
-%% Sequence diagram: ONE core use case, end to end.
 sequenceDiagram
-    actor U as User
+    actor P as Player
     participant UI
-    participant S as Service
-    participant D as Data
-    U->>UI: action
-    UI->>S: request
-    S->>D: save/load
-    D-->>S: result
-    S-->>UI: response
-    UI-->>U: confirmation
+    participant MS as MatchService
+    participant R as MatchResultRepo
+
+    P->>UI: trigger success event
+    UI->>MS: submitResult(matchId, outcome)
+    MS->>MS: check completion rules   
+    MS->>R: save(matchResult)
+    R-->>MS: matchResult id
+    MS-->>UI: response
+    UI-->>P: confirmation
 ```
 
 ## Architecture Decision Records
