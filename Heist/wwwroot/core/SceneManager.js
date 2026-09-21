@@ -117,7 +117,7 @@ export class SceneManager {
     buildLevel(walls) {
         for (const w of walls) {
             const width = w.maxX - w.minX;
-            const depth = w.maxZ = w.minZ;
+            const depth = w.maxZ - w.minZ;
             const mesh = new THREE.Mesh(
                 new THREE.BoxGeometry(width, 2, depth),
                 new THREE.MeshBasicMaterial({ color: 0x888888 })

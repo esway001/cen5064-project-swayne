@@ -60,7 +60,7 @@ public class GameRegistry
             if (!HitsAny(nx, z)) x = nx; //x move only if no wall
 
             float nz = z + vz;
-            if (!HitsAny(nz, x)) z = nz; //z move only if no wall, x may have been updated at this point
+            if (!HitsAny(x, nz)) z = nz; //z move only if no wall, x may have been updated at this point
 
             //here is the new state return
 
