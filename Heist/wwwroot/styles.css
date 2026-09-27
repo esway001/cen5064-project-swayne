@@ -25,3 +25,19 @@
     background: transparent;
     
 }
+#winBanner:not([hidden]) {
+    position: fixed;
+    inset: 0;
+    z-index: 10;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: rgba(0,0,0,0.55);
+}
+
+.win-card {
+    font-size: 3rem;
+    font-weight: bold;
+    letter-spacing: 0.05em;
+    color: #ffd700;
+}

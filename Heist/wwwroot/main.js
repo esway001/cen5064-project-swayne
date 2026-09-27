@@ -12,6 +12,7 @@ const input = new InputController();
 let predicted = { x: 0, z: 0 };
 let pending = [];
 let last = "";
+let gameOver = false;
 
 const playerName = sessionStorage.getItem('playerName') ?? "Anon";
 //target canvas element
@@ -47,7 +48,13 @@ net.onSnapshot(snap => {
         sceneManager.setSelf(predicted);
     }
     sceneManager.receiveSnapshot(snap.players); //remotes
-    console.log("state:", snap.state);          // lets test before making UI
+    //console.log("state:", snap.state);          // lets test before making UI
+
+    //simple win banner UI, if the server sends a "Won" state, we show the win banner
+    if (snap.state === "Won" && !gameOver) {
+        gameOver = true;
+        document.getElementById("winBanner").hidden = false;
+    }
 });
 
 window.addEventListener('resize', () => sceneManager.onWindowResize());
@@ -74,6 +81,7 @@ let seq = 0;
 
 /**Update intent intervals function to prediction on input function*/
 setInterval(() => {
+    if (gameOver) return; //stop sending input if game is over)
     const intent = input.getIntent();
     const cmd = { seq: seq++, x: intent.x, z: intent.z };
     pending.push(cmd);
