@@ -27,8 +27,16 @@ public class GameLoop : BackgroundService
 
         while (await timer.WaitForNextTickAsync(ct))
         {
-            _registry.Step(dt);
-            await _hub.Clients.All.SendAsync("Snapshot", _registry.All, ct);
+            try
+            {
+                _registry.Step(dt);
+                var snap = new Snapshot(_registry.State, _registry.All);
+                await _hub.Clients.All.SendAsync("Snapshot", snap, ct);
+            } catch (Exception ex) when (ex is not OperationCanceledException)
+            {
+                Console.WriteLine($"tick error: {ex}");     //log error, but don't crash the game, this way if its a single tick error, the whole game doesn't crash and we can see what happened
+            }
+
         }
     }
 }

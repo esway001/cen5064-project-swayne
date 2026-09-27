@@ -12,6 +12,8 @@ public class GameRegistry
     private readonly ConcurrentDictionary<string, InputCommand> _inputs = new();
     private readonly object _gate = new();
 
+    public GameState State { get; private set; } = GameState.Playing;
+
     public Player? Add(string connId, string name)
     {
         lock (_gate)            //this prevents players from taking the same slot, each player gets one slot 1-4
@@ -65,6 +67,24 @@ public class GameRegistry
             //here is the new state return
 
             _players[id] = p with { X = x, Z = z, LastSeq = seq };
+        }
+
+        if(State == GameState.Playing)
+        {
+            //check for win conditions
+            float reach = Level.Objective.Radius + Level.PlayerRadius;
+            foreach (var p in _players.Values)
+            {
+                //same as distance check in movement.js, this is checking collision math (sq distance vs radius)
+                // reach = prize + player radius, so toucing it counts. if state==playing is a guard to stay won
+                float dx = p.X - Level.Objective.X;
+                float dz = p.Z - Level.Objective.Z;
+                if(dx*dx + dz*dz < reach*reach)
+                {
+                    State = GameState.Won;
+                    break;
+                }
+            }
         }
     }
 

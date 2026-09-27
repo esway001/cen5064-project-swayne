@@ -36,17 +36,18 @@ net.onPlayerLeft(id => sceneManager.removePlayer(id));
 //debug log
 //net.onSnapshot(snap => console.log(snap));
 
-/* snap is players array
+/* snap is players array, update 9/27: snapshot must read through players and states, so added .players to the snapshot object, and added a lastSeq to each player for prediction
 */
 net.onSnapshot(snap => {
-    const me = snap.find(p => p.id === sceneManager.myId);
+    const me = snap.players.find(p => p.id === sceneManager.myId);
     if (me) {
         predicted = { x: me.x, z: me.z };                   //1. snap to recieved server pos
         pending = pending.filter(c => c.seq > me.lastSeq);  //2. drop our acknowledged seq
         for (const c of pending) predicted = applyInput(predicted, c, WALLS); //3. replay
         sceneManager.setSelf(predicted);
     }
-    sceneManager.receiveSnapshot(snap); //remotes
+    sceneManager.receiveSnapshot(snap.players); //remotes
+    console.log("state:", snap.state);          // lets test before making UI
 });
 
 window.addEventListener('resize', () => sceneManager.onWindowResize());
