@@ -5,7 +5,9 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 
 import { InputController } from './input/InputController.js';
 import { applyInput } from './shared/movement.js';
-import { WALLS } from './shared/level.js';
+import { WALLS, OBJECTIVE } from './shared/level.js';
+
+
 const input = new InputController();
 let predicted = { x: 0, z: 0 };
 let pending = [];
@@ -18,6 +20,7 @@ const myCanvas = document.querySelector('#heist-canvas');
 //init scenemanager
 const sceneManager = new SceneManager(myCanvas);
 sceneManager.buildLevel(WALLS);
+sceneManager.buildObjective(OBJECTIVE);
 const controls = new OrbitControls(sceneManager.camera, sceneManager.renderer.domElement);
 
 //Network Methods
