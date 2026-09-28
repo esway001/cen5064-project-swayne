@@ -10,9 +10,12 @@ builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
-builder.Services.AddSignalR().AddJsonProtocol( o=>
-    o.PayloadSerializerOptions.PropertyNamingPolicy = System.Text.Json.JsonNamingPolicy.CamelCase);
-    //JSON protocol helps with casing
+builder.Services.AddSignalR().AddJsonProtocol(o => 
+{
+    o.PayloadSerializerOptions.PropertyNamingPolicy = System.Text.Json.JsonNamingPolicy.CamelCase;
+    o.PayloadSerializerOptions.Converters.Add( new System.Text.Json.Serialization.JsonStringEnumConverter());
+});
+//JSON protocol helps with casing
 builder.Services.AddSingleton<GameRegistry>();
 builder.Services.AddHostedService<GameLoop>();
 

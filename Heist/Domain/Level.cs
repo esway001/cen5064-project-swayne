@@ -12,4 +12,7 @@ public static class Level
         new(4f, 5f, -2f, 6f),
 
     };
+
+    //Mirror objective of level.js objective
+    public static readonly (float X, float Z, float Radius) Objective = (8f, 0, 0.75f);
 }

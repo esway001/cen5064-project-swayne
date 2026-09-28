@@ -163,5 +163,16 @@ export class SceneManager {
             while (buf.length > 60) buf.shift();        //history about 3s
         }
     }
-};
 
+
+    //Render the objective
+    buildObjective(obj) {
+        const mesh = new THREE.Mesh(
+            new THREE.CylinderGeometry(obj.radius, obj.radius, 1.5, 16),
+            new THREE.MeshBasicMaterial({ color: 0xffd700 }) //golden color
+        );
+        mesh.position.set(obj.x, 0, obj.z);
+        this.scene.add(mesh);
+    }
+
+};
