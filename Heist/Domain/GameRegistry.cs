@@ -34,11 +34,24 @@ public class GameRegistry
     }
     public IReadOnlyCollection<Player> All => _players.Values.ToArray();
 
-    public void SetInput(string connId, InputCommand cmd) => _inputs[connId] = cmd;
+    public void SetInput(string connId, InputCommand cmd) 
+    {
+        //AI CODE
+        if(State != GameState.Playing) return;
+        // END OF AI CODE
+        _inputs[connId] = cmd; 
+    }
 
     //IF MAKE CHANGES ON STEP, MATCH IN SHARED\MOVEMENT.JS
     public void Step(float dt)
     {
+        //AI CODE 
+        if(State != GameState.Playing)
+        {
+            _inputs.Clear();
+            return;
+        }
+        //END OF AI CODE
         foreach (var (id, p) in _players)
         {
             //get latest input from player
@@ -69,21 +82,24 @@ public class GameRegistry
             _players[id] = p with { X = x, Z = z, LastSeq = seq };
         }
 
-        if(State == GameState.Playing)
+       
+        //check for win conditions
+        float reach = Level.Objective.Radius + Level.PlayerRadius;
+        foreach (var p in _players.Values)
         {
-            //check for win conditions
-            float reach = Level.Objective.Radius + Level.PlayerRadius;
-            foreach (var p in _players.Values)
+            //same as distance check in movement.js, this is checking collision math (sq distance vs radius)
+            // reach = prize + player radius, so toucing it counts. if state==playing is a guard to stay won
+            float dx = p.X - Level.Objective.X;
+            float dz = p.Z - Level.Objective.Z;
+            if(dx*dx + dz*dz < reach*reach)
             {
-                //same as distance check in movement.js, this is checking collision math (sq distance vs radius)
-                // reach = prize + player radius, so toucing it counts. if state==playing is a guard to stay won
-                float dx = p.X - Level.Objective.X;
-                float dz = p.Z - Level.Objective.Z;
-                if(dx*dx + dz*dz < reach*reach)
-                {
-                    State = GameState.Won;
-                    break;
-                }
+                State = GameState.Won;
+
+                //Ai Code, Discard input that could be reused after Game Over
+                //_inputs.Clear();  //redundant
+                //End Ai Code
+
+                break;
             }
         }
     }
