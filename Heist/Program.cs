@@ -1,5 +1,6 @@
 using Heist.Domain;
 using Heist.Hubs;
+using Heist.Realtime;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -16,7 +17,7 @@ builder.Services.AddSignalR().AddJsonProtocol(o =>
     o.PayloadSerializerOptions.Converters.Add( new System.Text.Json.Serialization.JsonStringEnumConverter());
 });
 //JSON protocol helps with casing
-builder.Services.AddSingleton<GameRegistry>();
+builder.Services.AddSingleton<RoomRegistry>();
 builder.Services.AddHostedService<GameLoop>();
 
 var app = builder.Build();

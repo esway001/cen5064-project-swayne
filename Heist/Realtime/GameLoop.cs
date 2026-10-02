@@ -5,11 +5,11 @@ namespace Heist.Hubs;
 
 public class GameLoop : BackgroundService
 {
-    private readonly GameRegistry _registry;
+    private readonly Room _registry;
     private readonly IHubContext<GameHub> _hub;
 
     //bridge between background loop and connected browsers. Loop is not inside hub instance where clients are.
-    public GameLoop(GameRegistry registry, IHubContext<GameHub> hub)
+    public GameLoop(Room registry, IHubContext<GameHub> hub)
     {
         _registry = registry;
         _hub = hub;

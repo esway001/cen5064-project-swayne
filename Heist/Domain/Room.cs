@@ -4,8 +4,13 @@ namespace Heist.Domain;
 
 
 //World State, in memory, won't touch supabase. Add players, remove, get all players, singleton service for DI
-public class GameRegistry
+public class Room
 {
+    public string Code { get; }
+    public Room(string code) => Code = code;
+
+    public bool IsEmpty => _players.IsEmpty;
+
     private const int MaxPlayers = 4;
     private const float Speed = 5f;                         //world units per second
     private readonly ConcurrentDictionary<string, Player> _players = new();
