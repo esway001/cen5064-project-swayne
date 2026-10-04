@@ -15,6 +15,7 @@ let last = "";
 let gameOver = false;
 
 const playerName = sessionStorage.getItem('playerName') ?? "Anon";
+const roomCode = sessionStorage.getItem('roomCode') ?? "LOBBY";
 //target canvas element
 const myCanvas = document.querySelector('#heist-canvas');
 
@@ -57,6 +58,9 @@ net.onSnapshot(snap => {
     }
 });
 
+
+await net.join(roomCode, playerName);
+
 window.addEventListener('resize', () => sceneManager.onWindowResize());
 
 //render loop
@@ -89,6 +93,6 @@ setInterval(() => {
     sceneManager.setSelf(predicted);        //move box instantly
     net.sendInput(cmd);
 }, 50);
-await net.join(playerName);
+
 
 

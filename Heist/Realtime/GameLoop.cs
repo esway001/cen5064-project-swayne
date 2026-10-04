@@ -1,15 +1,15 @@
 ﻿using Microsoft.AspNetCore.SignalR;
 using Heist.Domain;
 
-namespace Heist.Hubs;
+namespace Heist.Realtime;
 
 public class GameLoop : BackgroundService
 {
-    private readonly Room _registry;
+    private readonly RoomRegistry _registry;
     private readonly IHubContext<GameHub> _hub;
 
     //bridge between background loop and connected browsers. Loop is not inside hub instance where clients are.
-    public GameLoop(Room registry, IHubContext<GameHub> hub)
+    public GameLoop(RoomRegistry registry, IHubContext<GameHub> hub)
     {
         _registry = registry;
         _hub = hub;
@@ -27,16 +27,19 @@ public class GameLoop : BackgroundService
 
         while (await timer.WaitForNextTickAsync(ct))
         {
-            try
+            foreach (var room in _registry.ActiveRooms)
             {
-                _registry.Step(dt);
-                var snap = new Snapshot(_registry.State, _registry.All);
-                await _hub.Clients.All.SendAsync("Snapshot", snap, ct);
-            } catch (Exception ex) when (ex is not OperationCanceledException)
-            {
-                Console.WriteLine($"tick error: {ex}");     //log error, but don't crash the game, this way if its a single tick error, the whole game doesn't crash and we can see what happened
+                try
+                {
+                    room.Step(dt);
+                    var snap = new Snapshot(room.State, room.All);
+                    await _hub.Clients.Group(room.Code).SendAsync("Snapshot", snap, ct);
+                }
+                catch (Exception ex) when (ex is not OperationCanceledException)
+                {
+                    Console.WriteLine($"tick error in room {room.Code}: {ex}");     //log error, but don't crash the game, this way if its a single tick error, the whole game doesn't crash and we can see what happened
+                }
             }
-
         }
     }
 }

@@ -1,5 +1,4 @@
 using Heist.Domain;
-using Heist.Hubs;
 using Heist.Realtime;
 
 var builder = WebApplication.CreateBuilder(args);
