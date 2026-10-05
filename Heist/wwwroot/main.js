@@ -5,8 +5,11 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 
 import { InputController } from './input/InputController.js';
 import { applyInput } from './shared/movement.js';
-import { WALLS, OBJECTIVE } from './shared/level.js';
+import { WALLS, OBJECTIVE, HAZARDS } from './shared/level.js';
 
+document.querySelectorAll(".homepage").forEach(btn =>
+    btn.addEventListener("click", () => { window.location.href = "login.html"; })
+);
 
 const input = new InputController();
 let predicted = { x: 0, z: 0 };
@@ -23,6 +26,7 @@ const myCanvas = document.querySelector('#heist-canvas');
 const sceneManager = new SceneManager(myCanvas);
 sceneManager.buildLevel(WALLS);
 sceneManager.buildObjective(OBJECTIVE);
+sceneManager.buildHazards(HAZARDS);
 const controls = new OrbitControls(sceneManager.camera, sceneManager.renderer.domElement);
 
 //Network Methods
@@ -49,12 +53,17 @@ net.onSnapshot(snap => {
         sceneManager.setSelf(predicted);
     }
     sceneManager.receiveSnapshot(snap.players); //remotes
+    sceneManager.setHazardStates(snap.traps);
     //console.log("state:", snap.state);          // lets test before making UI
 
     //simple win banner UI, if the server sends a "Won" state, we show the win banner
     if (snap.state === "Won" && !gameOver) {
         gameOver = true;
         document.getElementById("winBanner").hidden = false;
+    }
+    if (snap.state === "Lost" && !gameOver) {
+        gameOver = true;
+        document.getElementById("loseBanner").hidden = false;
     }
 });
 

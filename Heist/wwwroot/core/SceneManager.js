@@ -175,4 +175,32 @@ export class SceneManager {
         this.scene.add(mesh);
     }
 
+    buildHazards(hazards) {
+        this.hazardMeshes = [];
+        for (const h of hazards) {
+            const w = h.maxX - h.minX;
+            const d = h.maxZ - h.minZ;
+            const geo = new THREE.PlaneGeometry(w, d);
+            const mat = new THREE.MeshBasicMaterial({
+                color: 0x8b94a3,                            //grey for safe, flip to red for danger
+                transparent: true,
+                opacity: 0.3,
+                side: THREE.DoubleSide,
+            });
+            const mesh = new THREE.Mesh(geo, mat);
+            mesh.rotation.x = -Math.PI / 2;                 //rotate to make it live horizontally
+            mesh.position.set((h.minX + h.maxX) / 2, 0.02, (h.minZ + h.maxZ) / 2);  //lift to prevent z-fighting
+            this.scene.add(mesh);
+            this.hazardMeshes.push(mesh);
+        }
+    }
+
+    setHazardStates(armedFlags) {
+        this.hazardMeshes.forEach((m, i) => {
+            const armed = armedFlags[i];
+            m.material.color.setHex(armed ? 0xc23b22 : 0x8b94a3);
+            m.material.opacity = armed ? 0.5 : 0.3;
+        });
+    }
+
 };

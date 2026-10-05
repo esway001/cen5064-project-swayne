@@ -1,3 +1,3 @@
 ﻿namespace Heist.Domain;
 
-public enum GameState{ Playing, Won }
+public enum GameState{ Playing, Won, Lost }

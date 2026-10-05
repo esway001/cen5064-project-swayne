@@ -9,3 +9,9 @@ export const WALLS = [
 export const OBJECTIVE = { x: 8, z: 0, radius: 0.75 };
 
 export const PLAYER_RADIUS = 0.5;
+
+export const HAZARDS = [
+    //armed and safe state comes from the server each snapshot, just drawing the box here
+    {minX: 3, maxX: 4, minZ: -3, maxZ: 3},
+
+]

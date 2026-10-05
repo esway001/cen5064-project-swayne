@@ -30,6 +30,8 @@
     inset: 0;
     z-index: 10;
     display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
     align-items: center;
     justify-content: center;
     background: rgba(0,0,0,0.55);
@@ -41,3 +43,36 @@
     letter-spacing: 0.05em;
     color: #ffd700;
 }
+#loseBanner:not([hidden]) {
+    position: fixed;
+    inset: 0;
+    z-index: 10;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: rgba(0,0,0,0.55);
+}
+
+.lose-card {
+    font-size: 3rem;
+    font-weight: bold;
+    letter-spacing: 0.05em;
+    color: #961e1e;
+}
+
+.homepage {
+    padding: 0.7rem 1.6rem;
+    font-size: 1rem;
+    font-weight: 600;
+    letter-spacing: 0.04em;
+    background-color: #d9a520;
+    color: #1b1f27;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: transform 120ms ease, background 120ms ease, box-shadow 120ms ease;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.35);
+}
+.homepage:hover { background: #e8b733; transform: translateY(-1px);}
+.homepage:active { transform:translateY(1px); box-shadow: 0 1px 3px rgba(0,0,0,0.4);}
+.homepage:focus-visible { outline:2px solid #fff; outline-offset:2px;}
