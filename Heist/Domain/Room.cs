@@ -17,6 +17,10 @@ public class Room
     private readonly ConcurrentDictionary<string, InputCommand> _inputs = new();
     private readonly object _gate = new();
 
+    private double _elapsedMs;
+    private readonly bool[] _trapArmed = new bool[Level.Hazards.Length];
+    public IReadOnlyList<bool> TrapStates => _trapArmed;            //reported by snapshot
+
     public GameState State { get; private set; } = GameState.Playing;
 
     public Player? Add(string connId, string name)
@@ -57,6 +61,17 @@ public class Room
             return;
         }
         //END OF AI CODE
+
+        _elapsedMs += dt * 1000.0;
+
+        for (int i = 0; i < Level.Hazards.Length; i++)
+        {
+            var h = Level.Hazards[i];
+            var cycle = h.SafeMs + h.ArmedMs;
+            var t = _elapsedMs % cycle;
+            _trapArmed[i] = t >= h.SafeMs;          //safe then armed
+        }
+
         foreach (var (id, p) in _players)
         {
             //get latest input from player
@@ -85,6 +100,21 @@ public class Room
             //here is the new state return
 
             _players[id] = p with { X = x, Z = z, LastSeq = seq };
+        }
+
+        //for each player, if they step inside the hazard, end the game as a loss
+        foreach (var p in _players.Values)
+        {
+            for (int i = 0; i< Level.Hazards.Length; i++)
+            {
+                if (!_trapArmed[i]) continue;
+                var h = Level.Hazards[i];
+                if(p.X >= h.MinX - Level.PlayerRadius && p.X <= h.MaxX + Level.PlayerRadius && p.Z >= h.MinZ - Level.PlayerRadius && p.Z <= h.MaxZ + Level.PlayerRadius)
+                {
+                    State = GameState.Lost;
+                    return;                             //room is done, don't win check
+                }
+            }
         }
 
        
