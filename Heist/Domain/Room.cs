@@ -109,7 +109,7 @@ public class Room
             {
                 if (!_trapArmed[i]) continue;
                 var h = Level.Hazards[i];
-                if(p.X >= h.MinX && p.X <= h.MaxX && p.Z >= h.MinZ && p.Z <= h.MaxZ)
+                if(p.X >= h.MinX - Level.PlayerRadius && p.X <= h.MaxX + Level.PlayerRadius && p.Z >= h.MinZ - Level.PlayerRadius && p.Z <= h.MaxZ + Level.PlayerRadius)
                 {
                     State = GameState.Lost;
                     return;                             //room is done, don't win check
