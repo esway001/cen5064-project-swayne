@@ -1,0 +1,64 @@
+{
+  "formatVersion": 1,
+  "walls": [
+    {
+      "name": "collider_test",
+      "minX": -1,
+      "maxX": 1,
+      "minY": 0,
+      "maxY": 2,
+      "minZ": 3,
+      "maxZ": 4
+    },
+    {
+      "name": "collider_bad",
+      "minX": -2.2812681,
+      "maxX": -0.281268,
+      "minY": -0.7123307,
+      "maxY": 1.2876693,
+      "minZ": -6.5626516,
+      "maxZ": -4.5626516
+    }
+  ],
+  "hazards": [
+    {
+      "name": "hazard_strip",
+      "minX": 3,
+      "maxX": 4,
+      "minY": 0,
+      "maxY": 0.1,
+      "minZ": -3,
+      "maxZ": 3,
+      "safeMs": 5000,
+      "armedMs": 10000
+    }
+  ],
+  "spawns": [
+    {
+      "name": "spawn_1",
+      "x": -6,
+      "z": 0
+    },
+    {
+      "name": "spawn_2",
+      "x": -6,
+      "z": 2
+    },
+    {
+      "name": "spawn_3",
+      "x": -4,
+      "z": 0
+    },
+    {
+      "name": "spawn_4",
+      "x": -4,
+      "z": 2
+    }
+  ],
+  "objective": {
+    "name": "objective",
+    "x": 8,
+    "z": 0,
+    "radius": 0.75
+  }
+}
