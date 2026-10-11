@@ -1,7 +1,10 @@
 using Heist.Domain;
 using Heist.Realtime;
+using Microsoft.AspNetCore.StaticFiles;
 
 var builder = WebApplication.CreateBuilder(args);
+var types= new FileExtensionContentTypeProvider();
+types.Mappings[".glb"] = "model/gltf-binary";
 
 // Add services to the container.
 
@@ -33,7 +36,7 @@ app.UseHttpsRedirection();
 app.UseAuthorization();
 
 app.UseDefaultFiles(); //lets use index.html for root
-app.UseStaticFiles();   //serve wwwroot folder
+app.UseStaticFiles(new StaticFileOptions { ContentTypeProvider = types});   //serve wwwroot folder, added glb mime type for 3D models
 
 app.MapControllers();
 app.MapHub<GameHub>("/gamehub");

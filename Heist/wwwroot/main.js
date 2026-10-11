@@ -27,6 +27,7 @@ const sceneManager = new SceneManager(myCanvas);
 sceneManager.buildLevel(WALLS);
 sceneManager.buildObjective(OBJECTIVE);
 sceneManager.buildHazards(HAZARDS);
+sceneManager.loadModel('/assets/test_wall1.glb', {x: 0, y:-1, z:3.5});
 const controls = new OrbitControls(sceneManager.camera, sceneManager.renderer.domElement);
 
 //Network Methods
