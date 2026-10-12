@@ -46,15 +46,14 @@ instructor will follow it literally on conference days.]
 
 ## Architecture
 
-### Tier breakdown (Session 2 studio)
+### Tier breakdown (Session 2 studio updated 10/11)
 
 | Tier | Responsibilities in THIS system | Example Classes/Modules |
-|------|--------------------------------|------------|
-| Presentation | <ul><li>Displays interactable menu (dialog.js)<li> renders the scene<li> loads models and graphics |<ul><li> SceneManager.js<li> ModelLoader.js<li> Dialog.js<li> LevelLoader.js |
-| Service | <ul><li>Sign-in and Out with validation tokens signed by Supabase<li> load player profile and player level layouts<li> match making   | <ul><li>AuthService.EnsureProfile<li> AuthService.SignOut<li> PlayerProfileService.GetPlayableLevels<li> PlayerProfileService.GetLevelParams()<li> MatchResultService.RecordResult()   |
-| Domain | <ul><li>trigger a trap by doing A<li> complete the objective by interacting with object B and escaping through plane C<li> the collision rules for the capsules of the players to determine touch and interaction<li> interface that contracts the storing and getting match results <li> interface that stores and retrieves player profiles  | <ul><li>MovementRules.cs<li> CompletionPolicy.cs<li> TrapResolver.cs<li> IMatchResultRepo.cs<li> IPlayerProfileRepo.cs |
-| Data | <ul><li>match result table (with winner, time, completion; history)<li> statistics readable<li> score per-level the best times<li> playerprofiles | <ul><li>MatchResultRepo.cs<li> StatisticsRepo.cs<li> LeaderboardRepo.cs<li> PlayerProfileRepo.cs  |
-
+|------|--------------------------------|-------------------------|
+| Presentation | <ul><li>**Browser:** renders the 3D scene and GLB art</li><li>**Browser:** turns WASD into a movement intent</li><li>**Browser:** predicts the local player, interpolates remote players</li><li>**Browser:** shows lobby, waiting room, win/lose banners; fetches level JSON</li><li>**Server:** `GameHub` receives calls/inputs, pushes snapshots to the room's group</li><li>**Server:** `GameLoop` drives the 20 Hz tick; middleware validates the Supabase JWT</li></ul> | <ul><li>`SceneManager.js`</li><li>`InputController.js`</li><li>`NetworkClient.js`</li><li>`LevelLoader.js`</li><li>`LobbyView.js`</li><li>`GameHub.cs`</li><li>`GameLoop.cs`</li><li>`Program.cs` (composition root)</li></ul> |
+| Service | <ul><li>Create, join, start and leave rooms; route inputs</li><li>Tick every in-progress room and return snapshots (no transport knowledge)</li><li>Keep the directory of live rooms, with join and teardown serialized</li><li>Load and validate levels; list the playable ones</li><li>Provision a profile on first sign-in</li><li>Record finished matches; read history and best times</li></ul> | <ul><li>`IMatchSession` → `MatchSessionService`</li><li>`RoomRegistry`</li><li>`LevelCatalogService.ListPlayable()`</li><li>`AuthService.EnsureProfile()`</li><li>`MatchResultService.RecordResult()`</li><li>`StatisticsService.GetBestTimes()`</li></ul> |
+| Domain | <ul><li>`Room.Step`: freeze → trap clock → movement → hazard check → win check</li><li>Movement: circle-vs-AABB collide-and-slide</li><li>Touching an armed trap → **Lost**; reaching the objective → **Won** (escape later)</li><li>Entities and repository contracts; no framework code</li></ul> | <ul><li>`Room`, `Level`, `Player`</li><li>`MovementRules`</li><li>`TrapResolver`</li><li>`CompletionPolicy`</li><li>`ILevelRepo`</li><li>`IMatchResultRepo`</li><li>`IPlayerProfileRepo`</li></ul> |
+| Data | <ul><li>Level files (`levels/*.json` now, Supabase Storage later)</li><li>Match results table (level, players, outcome, time) + history and best-time queries</li><li>Player profiles</li><li>Only tier that references the Supabase SDK</li></ul> | <ul><li>`JsonLevelRepo`</li><li>`MatchResultRepo`</li><li>`PlayerProfileRepo`</li></ul> |
 
 ### C4 — Context & Container (Session 3 studio)
 
