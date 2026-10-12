@@ -121,70 +121,135 @@ flowchart LR
 ```
 
 ### UML — Class & Sequence (Session 3 studio)
+#### Class Diagram Phase II GameLoop Relationship
 
 ```mermaid
-classDiagram 
-    class Player {
-        -GUID Id
-        -string Name
-        -int Number
-        -float X
-        -float Y
-        -float Z
-        -int LastSeq
+classDiagram
+    direction LR
+ 
+    class Room {
+        +string Code
+        +GameState State
+        +Level Level
+        -Dictionary~string, Player~ _players
+        -Dictionary~string, InputCommand~ _inputs
+        -double _elapsedMs
+        -object _gate
+        +const int MaxPlayers = 4
+        +Add(string id, string name) Player?
+        +Remove(string id) void
+        +SetInput(string id, InputCommand cmd) void
+        +Step(float dt) void
+        +TrapStates() bool[]
+        +IsEmpty() bool
+        -HitsWall(float x, float z) bool
     }
-
-    class Match {
-        -GUID Id
-        -DateTime StartedAt
-        -DateTime? EndedAt
-        -List~GUID~ PlayerIds
-        +IsComplete() bool
+ 
+    class Player {
+        <<record>>
+        +string Id
+        +string Name
+        +int Number
+        +float X
+        +float Y
+        +float Z
+        +int LastSeq
+    }
+ 
+    class Level {
+        +string Id
+        +int FormatVersion
+        +IReadOnlyList~Box~ Walls
+        +IReadOnlyList~Hazard~ Hazards
+        +IReadOnlyList~Spawn~ Spawns
+        +Objective Objective
+        +SpawnFor(int number) Spawn
+    }
+ 
+    class Hazard {
+        <<record>>
+        +string Name
+        +float MinX
+        +float MaxX
+        +float MinY
+        +float MaxY
+        +float MinZ
+        +float MaxZ
+        +int SafeMs
+        +int ArmedMs
+        +IsArmed(double elapsedMs) bool
+    }
+ 
+    class MatchResult {
+        +Guid Id
+        +string RoomCode
+        +string LevelId
+        +GameState Outcome
+        +DateTime StartedAt
+        +DateTime EndedAt
+        +List~Guid~ PlayerIds
         +Duration() TimeSpan
     }
-
-    class Level {
-        <<static>>
-        +PlayerRadius : float
-        +Walls : List~Wall~
+ 
+    class GameState {
+        <<enumeration>>
+        Playing
+        Won
+        Lost
     }
-
-    class Wall {
-        <<record>>
-        +MinX : float
-        +MaxX : float
-        +MinZ : float
-        +MaxZ : float
-    }
-
-    class PlayerProfile {
-        -GUID UserId
-        -string DisplayName
-        -int MatchesPlayed
-        -int MatchesWon
-        +WinRate() float
-    }
-
-    Match "1" --> "2..4" Player : consists of
-    Match "1" --> "1" Level : played on
-    Level "1" --> "*" Wall : contains
-    PlayerProfile "1" --> "0..*" Match : history
+ 
+    Room "1" *-- "0..4" Player : holds
+    Room "*" --> "1" Level : played on
+    Level "1" *-- "0..*" Hazard : contains
+    Room --> GameState : state
+    Room ..> MatchResult : creates on Won or Lost
+    MatchResult --> GameState : outcome
 ```
+#### Sequence Diagram Phase I Sign into Game
 
 ```mermaid
 sequenceDiagram
+    autonumber
     actor P as Player
-    participant UI
-    participant MS as MatchService
-    participant R as MatchResultRepo
-
-    P->>UI: trigger success event
-    UI->>MS: submitResult(matchId, outcome)
-    MS->>MS: check completion rules   
-    MS->>R: save(matchResult)
-    R-->>MS: matchResult id
-    MS-->>UI: response
-    UI-->>P: confirmation
+    box Presentation - browser (client)
+        participant LG as login.html
+        participant M as main.js
+        participant NC as NetworkClient
+    end
+    box Presentation - server
+        participant GH as GameHub
+    end
+    box Service
+        participant RR as RoomRegistry
+    end
+    box Domain
+        participant R as Room
+    end
+ 
+    P->>LG: type name and room code, submit
+    LG->>LG: save name and code in sessionStorage
+    LG->>M: navigate to index.html
+    M->>NC: register onWelcome, onPlayerJoined, onPlayerLeft, onSnapshot
+    Note over M,NC: Handlers are wired before join, or one-time events are lost
+    M->>NC: join(code, name)
+    NC->>GH: JoinRoom(code, name) over SignalR
+    GH->>RR: GetOrCreate(code)
+    alt code is new, including a typo
+        RR->>R: new Room(code)
+        R-->>RR: room
+    end
+    RR-->>GH: room
+    GH->>R: AddPlayer(connectionId, name)
+    R->>R: next free number under the lock, spawn at X = (number-1)*2, Z = 0
+    R-->>GH: Player
+    GH->>RR: Track(connectionId, code)
+    GH->>GH: add connection to SignalR group code
+    GH-->>NC: Welcome(player, players)
+    GH-->>NC: PlayerJoined(player) to others in the group
+    NC-->>M: onWelcome builds the scene, starts sending input
+    Note over GH,R: The room ticks from creation, so snapshots start at once
+    GH-->>NC: Snapshot(state, players, traps) every 50 ms
+    M-->>P: in the game
 ```
 
 ## Architecture Decision Records
