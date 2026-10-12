@@ -55,41 +55,69 @@ instructor will follow it literally on conference days.]
 | Domain | <ul><li>`Room.Step`: freeze → trap clock → movement → hazard check → win check</li><li>Movement: circle-vs-AABB collide-and-slide</li><li>Touching an armed trap → **Lost**; reaching the objective → **Won** (escape later)</li><li>Entities and repository contracts; no framework code</li></ul> | <ul><li>`Room`, `Level`, `Player`</li><li>`MovementRules`</li><li>`TrapResolver`</li><li>`CompletionPolicy`</li><li>`ILevelRepo`</li><li>`IMatchResultRepo`</li><li>`IPlayerProfileRepo`</li></ul> |
 | Data | <ul><li>Level files (`levels/*.json` now, Supabase Storage later)</li><li>Match results table (level, players, outcome, time) + history and best-time queries</li><li>Player profiles</li><li>Only tier that references the Supabase SDK</li></ul> | <ul><li>`JsonLevelRepo`</li><li>`MatchResultRepo`</li><li>`PlayerProfileRepo`</li></ul> |
 
-### C4 — Context & Container (Session 3 studio)
+### C4 — Context & Container (Session 3 studio updated 10/11)
 
 ```mermaid
 flowchart TB
-    user([Player, 2-4, web browser]) -->|plays, sends token| system[Heist]
-    system-->|read/write|db[(Supabase Auth - External)]
-    user-->|logs in via|db[(Supabase Auth - External)]
-    user-->|loads libraries from| dbJS[(CDNs/JsDeliver - External)]
+    player([Player<br/>2–4 per match, desktop browser])
+    dev([Developer<br/>builds levels in Blender])
+ 
+    heist[Heist Game<br/>co-op 3D heist, server-authoritative]
+ 
+    supabase[Supabase - external<br/>Auth + Postgres/Storage]
+    cdn[CDNs: jsDelivr / cdnjs - external<br/>three.js, SignalR client, Bootstrap]
+ 
+    player -->|plays: inputs up, snapshots down| heist
+    player -.->|signs in, receives JWT| supabase
+    player -->|browser loads JS libraries| cdn
+    heist -.->|verifies JWT, reads/writes profiles and results| supabase
+    dev -->|exports level GLB, generates level JSON| heist
+ 
+    classDef person fill:#d4edda,stroke:#28a745,color:#155724
+    classDef system fill:#a9c4e8,stroke:#4a76b8,color:#1a3a5c
+    classDef external fill:#e6e6e6,stroke:#888888,color:#333333
+ 
+    class player,dev person
+    class heist system
+    class supabase,cdn external
 ```
 
 ```mermaid
 flowchart LR
-    player([Player, 2-4, web browser]) -->|WebSocket/SignalR<br/>inputs up, snapshots down| spa
-    player -->|HTTP<br/>static files now, REST later| spa
-
-    subgraph HeistSystem [Heist Game - Your System]
-        spa[Browser SPA<br/>Presentation]
-        spa -->|WebSocket calls| gameserver
-        spa -->|HTTP calls| gameserver
-        gameserver[Game Server<br/>Service + Domain<br/>ASP.NET monolith]
+    player([Player<br/>desktop browser])
+    dev([Developer])
+ 
+    subgraph heist [Heist Game]
+        spa[Browser SPA<br/>JavaScript, three.js, Bootstrap<br/>render, input, prediction, interpolation]
+        server[Game Server<br/>ASP.NET Core + SignalR<br/>hub + 20 Hz loop, services,<br/>domain rules, repositories]
+        files[(Level and asset files<br/>levels/*.json, *.glb<br/>served from wwwroot)]
+        tool[LevelTool<br/>C# console, dev-time only<br/>GLB to validated level JSON]
     end
-
-    spa -->|logs in via| db[(Supabase Auth - External)]
-    gameserver -->|read/write, planned| db
-    spa -->|loads libraries from| dbJS[(CDNs/jsDelivr - External)]
-
+ 
+    supaAuth[Supabase Auth<br/>external]
+    supaDb[(Supabase Postgres + Storage<br/>external)]
+    cdn[CDNs: jsDelivr / cdnjs<br/>external]
+ 
+    player -->|uses: keyboard, screen| spa
+    spa <-->|WebSocket / SignalR<br/>inputs up, snapshots down| server
+    spa -->|HTTP: SPA, GLB, level JSON<br/>REST later| server
+    server -->|loads and validates at startup| files
+    tool -->|writes| files
+    dev -->|runs| tool
+    spa -->|loads libraries| cdn
+    spa -.->|signs in, receives JWT| supaAuth
+    server -.->|verifies JWT| supaAuth
+    server -.->|reads/writes via repositories| supaDb
+ 
     classDef person fill:#d4edda,stroke:#28a745,color:#155724
-    classDef presentation fill:#dae8fc,stroke:#6c8ebf,color:#1a3a5c
-    classDef appdomain fill:#a9c4e8,stroke:#4a76b8,color:#1a3a5c
-    classDef data fill:#b3d9f7,stroke:#3a7ebf,color:#1a3a5c
-
-    class player person
-    class spa presentation
-    class gameserver appdomain
-    class db,dbJS data
+    classDef container fill:#dae8fc,stroke:#6c8ebf,color:#1a3a5c
+    classDef store fill:#b3d9f7,stroke:#3a7ebf,color:#1a3a5c
+    classDef external fill:#e6e6e6,stroke:#888888,color:#333333
+ 
+    class player,dev person
+    class spa,server,tool container
+    class files store
+    class supaAuth,supaDb,cdn external
 ```
 
 ### UML — Class & Sequence (Session 3 studio)
