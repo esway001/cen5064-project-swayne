@@ -6,9 +6,15 @@ namespace Heist.Domain;
 //World State, in memory, won't touch supabase. Add players, remove, get all players, singleton service for DI
 public class Room
 {
+    private readonly LevelFile _level;
     public string Code { get; }
-    public Room(string code) => Code = code;
+    public Room(string code, LevelFile level)
+    {
+        Code = code;
+        _level = level;
+        _trapArmed = new bool[level.Hazards.Count];
 
+    }
     public bool IsEmpty => _players.IsEmpty;
 
     private const int MaxPlayers = 4;
@@ -18,7 +24,7 @@ public class Room
     private readonly object _gate = new();
 
     private double _elapsedMs;
-    private readonly bool[] _trapArmed = new bool[Level.Hazards.Length];
+    private readonly bool[] _trapArmed; //= new bool[Level.Hazards.Length]; // moved to ctor
     public IReadOnlyList<bool> TrapStates => _trapArmed;            //reported by snapshot
 
     public GameState State { get; private set; } = GameState.Playing;
@@ -31,7 +37,8 @@ public class Room
             int number = Enumerable.Range(1, MaxPlayers).FirstOrDefault(n => !taken.Contains(n));
             if (number == 0) return null;                   //too many players, reject attempt
 
-            var p = new Player(connId, name, number, (number - 1) * 2f, 0f, 0f, 0);
+            var s = _level.Spawns[number - 1];
+            var p = new Player(connId, name, number, s.X, 0f, s.Z, 0);
             _players[connId] = p;
             return p;
         }
@@ -64,9 +71,9 @@ public class Room
 
         _elapsedMs += dt * 1000.0;
 
-        for (int i = 0; i < Level.Hazards.Length; i++)
+        for (int i = 0; i < _level.Hazards.Count; i++)
         {
-            var h = Level.Hazards[i];
+            var h = _level.Hazards[i];
             var cycle = h.SafeMs + h.ArmedMs;
             var t = _elapsedMs % cycle;
             _trapArmed[i] = t >= h.SafeMs;          //safe then armed
@@ -105,27 +112,41 @@ public class Room
         //for each player, if they step inside the hazard, end the game as a loss
         foreach (var p in _players.Values)
         {
-            for (int i = 0; i< Level.Hazards.Length; i++)
+            //replace old loop with loop for blender level
+            //for (int i = 0; i< Level.Hazards.Length; i++)
+            //{
+            //    if (!_trapArmed[i]) continue;
+            //    var h = Level.Hazards[i];
+            //    if(p.X >= h.MinX - Level.PlayerRadius && p.X <= h.MaxX + Level.PlayerRadius && p.Z >= h.MinZ - Level.PlayerRadius && p.Z <= h.MaxZ + Level.PlayerRadius)
+            //    {
+            //        State = GameState.Lost;
+            //        return;                             //room is done, don't win check
+            //    }
+            //}
+            for (int i =0; i< _level.Hazards.Count; i++)
             {
                 if (!_trapArmed[i]) continue;
-                var h = Level.Hazards[i];
-                if(p.X >= h.MinX - Level.PlayerRadius && p.X <= h.MaxX + Level.PlayerRadius && p.Z >= h.MinZ - Level.PlayerRadius && p.Z <= h.MaxZ + Level.PlayerRadius)
+                var h = _level.Hazards[i];
+                float cx = MathF.Max(h.MinX, MathF.Min(p.X, h.MaxX));
+                float cz = MathF.Max(h.MinZ, MathF.Min(p.Z, h.MaxZ));
+                float dx = p.X - cx, dz = p.Z - cz;
+                if(dx * dx + dz * dz < Level.PlayerRadius * Level.PlayerRadius)
                 {
                     State = GameState.Lost;
-                    return;                             //room is done, don't win check
+                    return;
                 }
             }
         }
 
        
         //check for win conditions
-        float reach = Level.Objective.Radius + Level.PlayerRadius;
+        float reach = _level.Objective.Radius + Level.PlayerRadius;
         foreach (var p in _players.Values)
         {
             //same as distance check in movement.js, this is checking collision math (sq distance vs radius)
             // reach = prize + player radius, so toucing it counts. if state==playing is a guard to stay won
-            float dx = p.X - Level.Objective.X;
-            float dz = p.Z - Level.Objective.Z;
+            float dx = p.X - _level.Objective.X;
+            float dz = p.Z - _level.Objective.Z;
             if(dx*dx + dz*dz < reach*reach)
             {
                 State = GameState.Won;
@@ -139,14 +160,14 @@ public class Room
         }
     }
 
-    private static bool HitsAny(float x, float z)
+    private bool HitsAny(float x, float z)
     {
-        foreach (var w in Level.Walls)
+        foreach (var w in _level.Walls)
             if (HitsWall(x, z, w)) return true;
         return false;
     }
 
-    private static bool HitsWall(float x, float z, Wall w)
+    private bool HitsWall(float x, float z, WallData w)
     {
         // check for the closest point on the box to x,z
         float cx = MathF.Max(w.MinX, MathF.Min(x, w.MaxX));
