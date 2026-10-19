@@ -6,9 +6,11 @@ public class RoomRegistry
 {
     private readonly ConcurrentDictionary<string, Room> _rooms = new();         //code for room, ondemand rooms
     private readonly ConcurrentDictionary<string, string> _connRoom = new();    // connectionId for room, for looking up
+    private readonly LevelCatalog _catalog;
+    public RoomRegistry(LevelCatalog catalog) => _catalog = catalog;
 
     //find room
-    public Room GetOrCreate(string code) => _rooms.GetOrAdd(code, c => new Domain.Room(c));
+    public Room GetOrCreate(string code) => _rooms.GetOrAdd(code, c => new Room(c, _catalog.Get("test")));
 
     //Routemap
     public Room? RoomOf(string connId)
