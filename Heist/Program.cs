@@ -1,7 +1,10 @@
 using Heist.Domain;
 using Heist.Realtime;
+using Microsoft.AspNetCore.StaticFiles;
 
 var builder = WebApplication.CreateBuilder(args);
+var types= new FileExtensionContentTypeProvider();
+types.Mappings[".glb"] = "model/gltf-binary";
 
 // Add services to the container.
 
@@ -19,7 +22,13 @@ builder.Services.AddSignalR().AddJsonProtocol(o =>
 builder.Services.AddSingleton<RoomRegistry>();
 builder.Services.AddHostedService<GameLoop>();
 
+//Level Catalog register
+builder.Services.AddSingleton(sp => new LevelCatalog(
+    Path.Combine(sp.GetRequiredService<IWebHostEnvironment>().WebRootPath, "levels"),
+    sp.GetRequiredService<ILogger<LevelCatalog>>()));
+
 var app = builder.Build();
+app.Services.GetRequiredService<LevelCatalog>(); //force load, crash loud if no levels exist
 
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
@@ -33,9 +42,15 @@ app.UseHttpsRedirection();
 app.UseAuthorization();
 
 app.UseDefaultFiles(); //lets use index.html for root
-app.UseStaticFiles();   //serve wwwroot folder
+app.UseStaticFiles(new StaticFileOptions { ContentTypeProvider = types});   //serve wwwroot folder, added glb mime type for 3D models
 
 app.MapControllers();
 app.MapHub<GameHub>("/gamehub");
+
+//JSON TEST
+//var json = File.ReadAllText("wwwroot/levels/test.json");
+//var lvl = System.Text.Json.JsonSerializer.Deserialize<LevelFile>(
+//    json, new System.Text.Json.JsonSerializerOptions { PropertyNameCaseInsensitive = true });
+//Console.WriteLine($"walls={lvl.Walls.Count} spawns={lvl.Spawns.Count} objX={lvl.Objective.X}");
 
 app.Run();

@@ -1,4 +1,6 @@
 ﻿import * as THREE from 'three';
+import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
+import { DRACOLoader } from 'three/addons/loaders/DRACOLoader.js';
 
 const PLAYER_COLORS = { 1: 0xff0000, 2: 0x1656AD, 3: 0x008000, 4: 0xF0C807 };
 const INTERP_DELAY = 100; //100ms delay
@@ -14,6 +16,9 @@ export class SceneManager {
         this.buffers = new Map();   //player list of timestamp samples
         this.myId = null;
         this.selfTarget = null;
+        this.gltfLoader = new GLTFLoader();
+        this.draco = new DRACOLoader();
+        this.addLights();
     }
 
     /**
@@ -201,6 +206,37 @@ export class SceneManager {
             m.material.color.setHex(armed ? 0xc23b22 : 0x8b94a3);
             m.material.opacity = armed ? 0.5 : 0.3;
         });
+    }
+
+    async loadModel(url, pos = {x:0,y:0,z:0}) {
+        let gltf;
+        try {
+            //gltf also holds .animations, .cameras, and .asset
+            gltf = await this.gltfLoader.loadAsync(url);      // load file to gltf container, gltf.scene is the model
+        } catch (err) {
+            console.error(`[GLB] failed to load ${url} `, err);       //url says which file failed, err gives why
+            return null;
+        }
+        const model = gltf.scene;                               // the model is the gltf.scene
+        model.position.set(pos.x, pos.y, pos.z);                // change vector3, give position to model
+        this.scene.add(model);                                  // add model to scene
+        const box3 = new THREE.Box3().setFromObject(model);
+        console.log('[GLB] min: ', box3.min, ' max: ', box3.max);
+        return model;                                           // give caller loaded object
+    }
+
+    addLights() {
+        const skyColor = 0xffffff;
+        const dirColor = 0xffffff;
+        const groundColor = 0x444444;
+        const sunIntensity = 1.5;
+        const hemiIntensity = 2;
+        const light = new THREE.HemisphereLight(skyColor, groundColor, sunIntensity);
+        this.scene.add(light);
+
+        const dirLight = new THREE.DirectionalLight(dirColor, hemiIntensity);
+        dirLight.position.set(5, 10, 7);
+        this.scene.add(dirLight);
     }
 
 };
