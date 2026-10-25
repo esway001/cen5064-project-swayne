@@ -16,6 +16,7 @@ let predicted = { x: 0, z: 0 };
 let pending = [];
 let last = "";
 let gameOver = false;
+let level = null;
 
 const playerName = sessionStorage.getItem('playerName') ?? "Anon";
 const roomCode = sessionStorage.getItem('roomCode') ?? "LOBBY";
@@ -32,7 +33,16 @@ const controls = new OrbitControls(sceneManager.camera, sceneManager.renderer.do
 
 //Network Methods
 const net = new NetworkClient("/gameHub");
-net.onWelcome((me, roster) => {
+net.onWelcome(async(me, roster, levelId) => {
+    const res = await fetch(`/levels/${levelId}.json`); 
+    if (!res.ok) { alert("Couldn't load level"); window.location.href = "login.html"; return; }
+    level = await res.json();
+
+    sceneManager.buildLevel(level.walls);
+    sceneManager.buildObjective(level.objective);
+    sceneManager.buildHazards(level.hazards);
+
+
     sceneManager.myId = me.id;
     predicted = { x: me.x, z: me.z }; //seed on spawn the predictions
     roster.forEach(p => sceneManager.addPlayer(p))
