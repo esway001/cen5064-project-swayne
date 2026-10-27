@@ -23,9 +23,13 @@ builder.Services.AddSingleton<RoomRegistry>();
 builder.Services.AddHostedService<GameLoop>();
 
 //Level Catalog register
-builder.Services.AddSingleton(sp => new LevelCatalog(
-    Path.Combine(sp.GetRequiredService<IWebHostEnvironment>().WebRootPath, "levels"),
-    sp.GetRequiredService<ILogger<LevelCatalog>>()));
+builder.Services.AddSingleton<LevelLoader>();
+builder.Services.AddSingleton(sp =>
+{
+    var loader = sp.GetRequiredService<LevelLoader>();
+    var dir = Path.Combine(sp.GetRequiredService<IWebHostEnvironment>().WebRootPath, "levels");
+    return new LevelCatalog(loader.Load(dir));
+});
 
 var app = builder.Build();
 app.Services.GetRequiredService<LevelCatalog>(); //force load, crash loud if no levels exist
