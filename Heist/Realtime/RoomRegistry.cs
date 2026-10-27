@@ -10,7 +10,7 @@ public class RoomRegistry
     public RoomRegistry(LevelCatalog catalog) => _catalog = catalog;
 
     //find room
-    public Room GetOrCreate(string code) => _rooms.GetOrAdd(code, c => new Room(c, _catalog.Get("test")));
+    public Room GetOrCreate(string code) => _rooms.GetOrAdd(code, c => new Room(c, "test", _catalog.Get("test")));
 
     //Routemap
     public Room? RoomOf(string connId)

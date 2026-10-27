@@ -21,7 +21,7 @@ public class GameHub: Hub
         _registry.Track(Context.ConnectionId, code);
         await Groups.AddToGroupAsync(Context.ConnectionId, code);   //This update putz conn into SignlR group by room code
 
-        await Clients.Caller.SendAsync("Welcome", me, room.All); // Show current state to new player
+        await Clients.Caller.SendAsync("Welcome", me, room.All, room.LevelId); // Show current state to new player
         await Clients.OthersInGroup(code).SendAsync("PlayerJoined", me); // make accouncement to all
     }
 

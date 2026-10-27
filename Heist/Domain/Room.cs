@@ -7,10 +7,12 @@ namespace Heist.Domain;
 public class Room
 {
     private readonly LevelFile _level;
+    public string LevelId { get; }
     public string Code { get; }
-    public Room(string code, LevelFile level)
+    public Room(string code, string levelId, LevelFile level)
     {
         Code = code;
+        LevelId = levelId;
         _level = level;
         _trapArmed = new bool[level.Hazards.Count];
 
