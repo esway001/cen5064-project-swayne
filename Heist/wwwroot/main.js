@@ -5,7 +5,6 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 
 import { InputController } from './input/InputController.js';
 import { applyInput } from './shared/movement.js';
-import { WALLS, OBJECTIVE, HAZARDS } from './shared/level.js';
 
 document.querySelectorAll(".homepage").forEach(btn =>
     btn.addEventListener("click", () => { window.location.href = "login.html"; })
@@ -25,10 +24,6 @@ const myCanvas = document.querySelector('#heist-canvas');
 
 //init scenemanager
 const sceneManager = new SceneManager(myCanvas);
-sceneManager.buildLevel(WALLS);
-sceneManager.buildObjective(OBJECTIVE);
-sceneManager.buildHazards(HAZARDS);
-sceneManager.loadModel('/assets/test_wall1.glb', {x: 0, y:-1, z:3.5});
 const controls = new OrbitControls(sceneManager.camera, sceneManager.renderer.domElement);
 
 //Network Methods
@@ -41,7 +36,7 @@ net.onWelcome(async(me, roster, levelId) => {
     sceneManager.buildLevel(level.walls);
     sceneManager.buildObjective(level.objective);
     sceneManager.buildHazards(level.hazards);
-
+    sceneManager.loadModel(`/assets/${levelId}.glb`);
 
     sceneManager.myId = me.id;
     predicted = { x: me.x, z: me.z }; //seed on spawn the predictions
@@ -56,11 +51,13 @@ net.onPlayerLeft(id => sceneManager.removePlayer(id));
 /* snap is players array, update 9/27: snapshot must read through players and states, so added .players to the snapshot object, and added a lastSeq to each player for prediction
 */
 net.onSnapshot(snap => {
+    //guard
+    if (!level) return;
     const me = snap.players.find(p => p.id === sceneManager.myId);
     if (me) {
         predicted = { x: me.x, z: me.z };                   //1. snap to recieved server pos
         pending = pending.filter(c => c.seq > me.lastSeq);  //2. drop our acknowledged seq
-        for (const c of pending) predicted = applyInput(predicted, c, WALLS); //3. replay
+        for (const c of pending) predicted = applyInput(predicted, c, level.walls); //3. replay
         sceneManager.setSelf(predicted);
     }
     sceneManager.receiveSnapshot(snap.players); //remotes
@@ -105,11 +102,12 @@ let seq = 0;
 
 /**Update intent intervals function to prediction on input function*/
 setInterval(() => {
-    if (gameOver) return; //stop sending input if game is over)
+    if (gameOver) return;   //stop sending input if game is over)
+    if (!level) return;     //level not loaded
     const intent = input.getIntent();
     const cmd = { seq: seq++, x: intent.x, z: intent.z };
     pending.push(cmd);
-    predicted = applyInput(predicted, cmd, WALLS); //prediction
+    predicted = applyInput(predicted, cmd, level.walls); //prediction
     sceneManager.setSelf(predicted);        //move box instantly
     net.sendInput(cmd);
 }, 50);

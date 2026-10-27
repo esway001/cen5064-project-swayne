@@ -14,7 +14,6 @@
     <Folder Include="Controllers\" />
     <Folder Include="Data\" />
     <Folder Include="Services\" />
-    <Folder Include="wwwroot\assets\" />
   </ItemGroup>
 
 </Project>
