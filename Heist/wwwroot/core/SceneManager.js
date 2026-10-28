@@ -3,6 +3,7 @@ import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 import { DRACOLoader } from 'three/addons/loaders/DRACOLoader.js';
 
 const PLAYER_COLORS = { 1: 0xff0000, 2: 0x1656AD, 3: 0x008000, 4: 0xF0C807 };
+const MARKER_PREFIXES = ['collider_', 'hazard_', 'spawn_', 'objective'];
 const INTERP_DELAY = 100; //100ms delay
 export class SceneManager {
     constructor(canvas) {
@@ -28,6 +29,8 @@ export class SceneManager {
     createCamera() {
         const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 100);
         camera.position.z = 5;
+        camera.position.y = 5;
+        camera.lookAt(0, 0, 0);
         return camera;
     }
     createRenderer() {
@@ -109,8 +112,10 @@ export class SceneManager {
     addPlayer(p) {
         //we can later replace this mesh with a model from blender
         const color = PLAYER_COLORS[p.number] ?? 0xffffff;
+        const geo = new THREE.BoxGeometry(1, 1, 1);
+        geo.translate(0, 0.5, 0);               //lift bottom off 0
         const mesh = new THREE.Mesh(
-            new THREE.BoxGeometry(1, 1, 1),
+            geo,
             new THREE.MeshBasicMaterial({ color })
         );
         //set posiiton
@@ -122,12 +127,15 @@ export class SceneManager {
     buildLevel(walls) {
         for (const w of walls) {
             const width = w.maxX - w.minX;
+            const height = w.maxY - w.minY;
             const depth = w.maxZ - w.minZ;
             const mesh = new THREE.Mesh(
                 new THREE.BoxGeometry(width, 2, depth),
                 new THREE.MeshBasicMaterial({ color: 0x888888 })
             );
-            mesh.position.set((w.minX + w.maxX) / 2, 0, (w.minZ + w.maxZ) / 2);
+            mesh.position.set((w.minX + w.maxX) / 2,
+                (w.minY + w.maxY) / 2,
+                (w.minZ + w.maxZ) / 2);
             
             this.scene.add(mesh);
         }
@@ -176,7 +184,7 @@ export class SceneManager {
             new THREE.CylinderGeometry(obj.radius, obj.radius, 1.5, 16),
             new THREE.MeshBasicMaterial({ color: 0xffd700 }) //golden color
         );
-        mesh.position.set(obj.x, 0, obj.z);
+        mesh.position.set(obj.x, 0.75, obj.z);
         this.scene.add(mesh);
     }
 
@@ -220,6 +228,10 @@ export class SceneManager {
         const model = gltf.scene;                               // the model is the gltf.scene
         model.position.set(pos.x, pos.y, pos.z);                // change vector3, give position to model
         this.scene.add(model);                                  // add model to scene
+
+        model.traverse(obj => {                                             //hide the markers
+            if (MARKER_PREFIXES.some(p => obj.name.startsWith(p))) obj.visible = false;
+        });
         const box3 = new THREE.Box3().setFromObject(model);
         console.log('[GLB] min: ', box3.min, ' max: ', box3.max);
         return model;                                           // give caller loaded object
