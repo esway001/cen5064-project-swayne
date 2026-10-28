@@ -35,7 +35,8 @@ export class SceneManager {
     }
     createRenderer() {
         const renderer = new THREE.WebGLRenderer({ canvas: this.canvas, antialias: true });
-        renderer.setSize(this.canvas.clientWidth, this.canvas.clientHeight);
+        //renderer.setSize(this.canvas.clientWidth, this.canvas.clientHeight);
+        renderer.setSize(window.innerWidth, window.innerHeight);
         return renderer;
     }
     createCube() {
@@ -96,8 +97,10 @@ export class SceneManager {
     }
 
     onWindowResize() {
-        const width = this.canvas.clientWidth;
-        const height = this.canvas.clientHeight;
+        // const width = this.canvas.clientWidth;
+        // const height = this.canvas.clientHeight;
+        const width = window.innerWidth;
+        const height = window.innerHeight;
 
         this.camera.aspect = width / height;
         this.camera.updateProjectionMatrix();

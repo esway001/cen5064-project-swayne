@@ -17,22 +17,50 @@
     <title>Heist</title>
 </head>
 <body>
-    <!--TOP BAR-->
-    <div id="titlebar" class="position-fixed top-0 start-0 end-0 d-flex align-items-center justify-content-between px-4 py-2" style="z-index:5;">
-        <div class="d-flex align-items-center gap-3">
-            <span class="bar-logo h2" aria-label="Heist Game">Heist</span>
-            <span class="bar-title h4">Test Game <span class="bar-subtitle h6">Gameplay</span></span>
+    <div id="loginView">
+        <header>
+            <h1>Heist</h1>
+            <h2>Login</h2>
+        </header>
+        <main>
+            <form>
+                <div class="form-group">
+                    <label for="username">Username</label>
+                    <input type="text" class="form-control" id="username" aria-describedby="userHelp" />
+                    <small id="userHelp" class="form-text text-muted">Username is used to log in and acts as player name</small>
+                    <br />
+                    <input id="roomCode" placeholder="Room code (e.g. A7KQ)" />
+                    <button type="button" id="submitButton" class="btn btn-primary">Login</button>
+                </div>
+            </form>
+        </main>
+    </div>
+
+    <div id="lobbyView" hidden>
+        <h2>Lobby</h2>
+        <button id="enterGameBtn">Enter Game (temp)</button>
+    </div>
+
+    <div id="waitingView" hidden></div>
+
+    <div id="gameView" hidden>
+        <!--TOP BAR-->
+        <div id="titlebar" class="position-fixed top-0 start-0 end-0 d-flex align-items-center justify-content-between px-4 py-2" style="z-index:5;">
+            <div class="d-flex align-items-center gap-3">
+                <span class="bar-logo h2" aria-label="Heist Game">Heist</span>
+                <span class="bar-title h4">Test Game <span class="bar-subtitle h6">Gameplay</span></span>
+            </div>
         </div>
-    </div>
-    <div class="horizontal-line"></div>
-    <canvas id="heist-canvas"></canvas>
-    <div id="winBanner" hidden>
-        <div class="win-card">Heist Complete</div>
-        <button id="homepageWin" class="homepage">Return to HomePage</button>
-    </div>
-    <div id="loseBanner" hidden>
-        <div class="lose-card">Heist Failed</div>
-        <button id="homepage" class="homepage">Return to HomePage</button>
+        <div class="horizontal-line"></div>
+        <canvas id="heist-canvas"></canvas>
+        <div id="winBanner" hidden>
+            <div class="win-card">Heist Complete</div>
+            <button id="homepageWin" class="homepage">Return to HomePage</button>
+        </div>
+        <div id="loseBanner" hidden>
+            <div class="lose-card">Heist Failed</div>
+            <button id="homepage" class="homepage">Return to HomePage</button>
+        </div>
     </div>
     <!--SignalR CDN-->
     <script src="https://cdn.jsdelivr.net/npm/@microsoft/signalr@8.0.0/dist/browser/signalr.min.js"></script>
