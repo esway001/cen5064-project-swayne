@@ -10,6 +10,8 @@ document.querySelectorAll(".homepage").forEach(btn =>
     btn.addEventListener("click", () => { window.location.href = "login.html"; })
 );
 
+const DEBUG_COLLIDERS = false;          //debug collider boxes on off
+
 const input = new InputController();
 let predicted = { x: 0, z: 0 };
 let pending = [];
@@ -33,9 +35,9 @@ net.onWelcome(async(me, roster, levelId) => {
     if (!res.ok) { alert("Couldn't load level"); window.location.href = "login.html"; return; }
     level = await res.json();
 
-    sceneManager.buildLevel(level.walls);
-    sceneManager.buildObjective(level.objective);
-    sceneManager.buildHazards(level.hazards);
+    if(DEBUG_COLLIDERS)sceneManager.buildLevel(level.walls);        //debug only
+    sceneManager.buildObjective(level.objective);                   //gameplay goal
+    sceneManager.buildHazards(level.hazards);                       //armed safe feedback
     sceneManager.loadModel(`/assets/${levelId}.glb`);
 
     sceneManager.myId = me.id;

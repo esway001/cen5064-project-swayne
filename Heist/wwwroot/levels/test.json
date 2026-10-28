@@ -3,12 +3,21 @@
   "walls": [
     {
       "name": "collider_test",
-      "minX": -1,
-      "maxX": 1,
+      "minX": -7.791644,
+      "maxX": 9.800296,
       "minY": 0,
       "maxY": 2,
       "minZ": 3,
       "maxZ": 4
+    },
+    {
+      "name": "collider_testb",
+      "minX": -7.791644,
+      "maxX": 9.800296,
+      "minY": 0,
+      "maxY": 2,
+      "minZ": -4.04488,
+      "maxZ": -3.04488
     }
   ],
   "hazards": [
@@ -16,8 +25,8 @@
       "name": "hazard_strip",
       "minX": 3,
       "maxX": 4,
-      "minY": -1.1175871E-08,
-      "maxY": 0.10000001,
+      "minY": 0,
+      "maxY": 0.100000024,
       "minZ": -3,
       "maxZ": 3,
       "safeMs": 5000,
