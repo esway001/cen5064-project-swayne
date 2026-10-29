@@ -52,6 +52,7 @@ function showView(name) {
 
 //Network Methods
 const net = new NetworkClient("/gameHub");
+window.net = net; //TEMPORARY CONSOLE TEST
 net.onWelcome(async(me, roster, levelId) => {
     const res = await fetch(`/levels/${levelId}.json`); 
     if (!res.ok) { alert("Couldn't load level"); window.location.href = "/"; return; }

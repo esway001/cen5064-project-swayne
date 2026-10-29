@@ -17,6 +17,16 @@ public class Room
         _trapArmed = new bool[level.Hazards.Count];
 
     }
+
+    public RoomStatus Status { get; private set; } = RoomStatus.Waiting;
+
+    public void StartGame()
+    {
+        if (Status != RoomStatus.Waiting) return;        // start game once
+        Status = RoomStatus.InProgress;
+        _elapsedMs = 0;                                  // traps start at game start
+    }
+
     public bool IsEmpty => _players.IsEmpty;
 
     private const int MaxPlayers = 4;

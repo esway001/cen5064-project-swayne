@@ -29,6 +29,7 @@ public class GameLoop : BackgroundService
         {
             foreach (var room in _registry.ActiveRooms)
             {
+                if(room.Status != RoomStatus.InProgress) continue;
                 try
                 {
                     room.Step(dt);

@@ -41,4 +41,9 @@ public class GameHub: Hub
         //For test purposes
         //Console.WriteLine($"input from {Context.ConnectionId[..4]}: seq={cmd.Seq} x={cmd.X} z={cmd.Z}");
     }
+
+    public void StartGame()
+    {
+        _registry.RoomOf(Context.ConnectionId)?.StartGame();
+    }
 }
