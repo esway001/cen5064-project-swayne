@@ -7,8 +7,23 @@ import { InputController } from './input/InputController.js';
 import { applyInput } from './shared/movement.js';
 
 document.querySelectorAll(".homepage").forEach(btn =>
-    btn.addEventListener("click", () => { window.location.href = "login.html"; })
+    btn.addEventListener("click", () => { window.location.href = "/"; })
 );
+
+// submit login credentials -> stash identity and go to lobby
+document.getElementById('submitButton').addEventListener('click', () => {
+    sessionStorage.setItem('playerName', document.getElementById('username').value || "Anon");
+    sessionStorage.setItem('roomCode', document.getElementById('roomCode').value || "LOBBY");
+    showView('lobbyView');
+})
+
+//enter game, read identity then join
+document.getElementById('enterGameBtn').addEventListener('click', async () => {
+    const playerName = sessionStorage.getItem('playerName') ?? "Anon";
+    const roomCode = sessionStorage.getItem('roomCode') ?? "LOBBY";
+    await net.join(roomCode, playerName);
+    showView('gameView');
+})
 
 const DEBUG_COLLIDERS = false;          //debug collider boxes on off
 
@@ -28,11 +43,18 @@ const myCanvas = document.querySelector('#heist-canvas');
 const sceneManager = new SceneManager(myCanvas);
 const controls = new OrbitControls(sceneManager.camera, sceneManager.renderer.domElement);
 
+//view switcher
+function showView(name) {
+    for (const id of ['loginView', 'lobbyView', 'waitingView', 'gameView'])
+        document.getElementById(id).hidden = (id !== name);
+    if (name === 'gameView') sceneManager.onWindowResize();   //canvas size is 0x0 while hidden
+}
+
 //Network Methods
 const net = new NetworkClient("/gameHub");
 net.onWelcome(async(me, roster, levelId) => {
     const res = await fetch(`/levels/${levelId}.json`); 
-    if (!res.ok) { alert("Couldn't load level"); window.location.href = "login.html"; return; }
+    if (!res.ok) { alert("Couldn't load level"); window.location.href = "/"; return; }
     level = await res.json();
 
     if(DEBUG_COLLIDERS)sceneManager.buildLevel(level.walls);        //debug only
@@ -78,7 +100,9 @@ net.onSnapshot(snap => {
 });
 
 
-await net.join(roomCode, playerName);
+//await net.join(roomCode, playerName);
+await net.connect();    //open on load
+showView('loginView');  //land in login
 
 window.addEventListener('resize', () => sceneManager.onWindowResize());
 

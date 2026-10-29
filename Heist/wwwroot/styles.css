@@ -1,19 +1,23 @@
-﻿html, body {
-    margin:0;
+﻿/* ---- GLOBAL / GAME VIEW ---- */
+html, body {
+    margin: 0;
     height: 100%;
     overflow: hidden;
-    padding:0;
+    padding: 0;
     background-color: black;
 }
+
 #heist-canvas {
     background: var(--scene-bg, var(--bg));
     display: block;
     width: 100vw;
     height: 100vh;
 }
+
 .bar-logo {
     color: aliceblue;
 }
+
 .bar-title, .bar-subtitle {
     color: lightgreen;
 }
@@ -23,8 +27,8 @@
     width: 95%;
     margin: 60px auto;
     background: transparent;
-    
 }
+
 #winBanner:not([hidden]) {
     position: fixed;
     inset: 0;
@@ -43,11 +47,14 @@
     letter-spacing: 0.05em;
     color: #ffd700;
 }
+
 #loseBanner:not([hidden]) {
     position: fixed;
     inset: 0;
     z-index: 10;
     display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
     align-items: center;
     justify-content: center;
     background: rgba(0,0,0,0.55);
@@ -73,6 +80,59 @@
     transition: transform 120ms ease, background 120ms ease, box-shadow 120ms ease;
     box-shadow: 0 2px 8px rgba(0,0,0,0.35);
 }
-.homepage:hover { background: #e8b733; transform: translateY(-1px);}
-.homepage:active { transform:translateY(1px); box-shadow: 0 1px 3px rgba(0,0,0,0.4);}
-.homepage:focus-visible { outline:2px solid #fff; outline-offset:2px;}
+
+    .homepage:hover {
+        background: #e8b733;
+        transform: translateY(-1px);
+    }
+
+    .homepage:active {
+        transform: translateY(1px);
+        box-shadow: 0 1px 3px rgba(0,0,0,0.4);
+    }
+
+    .homepage:focus-visible {
+        outline: 2px solid #fff;
+        outline-offset: 2px;
+    }
+
+/* ---- LOGIN VIEW ONLY ---- */
+#loginView {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    min-height: 100dvh;
+    padding: 2rem;
+    color: #39ff14;
+    font-family: 'Franklin Gothic', 'Franklin Gothic Medium', 'Arial Narrow', Arial, sans-serif;
+    text-align: center;
+}
+
+    #loginView h1 {
+        font-family: 'Bookman Old Style';
+        margin: 0 0 0.25rem;
+        text-shadow: 0 0 8px rgba(57, 255, 20, 0.7);
+    }
+
+    #loginView form {
+        display: inline-flex;
+        flex-direction: column;
+        gap: 0.75rem;
+        padding: 2rem 2.5rem;
+        border: 2px solid #39ff14;
+        border-radius: 15px;
+        background: #0a0a0a;
+        box-shadow: 0 0 10px #39ff14, 0 0 24px rgba(57, 255, 20, 0.6), inset 0 0 12px rgba(57, 255, 20, 0.25);
+    }
+
+    #loginView .form-control,
+    #loginView #roomCode {
+        background: #000;
+        border: 1px solid #39ff14;
+        color: #39ff14;
+    }
+
+    #loginView .text-muted {
+        color: aliceblue;
+    }
