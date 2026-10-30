@@ -9,6 +9,9 @@ public class Room
     private readonly LevelFile _level;
     public string LevelId { get; }
     public string Code { get; }
+    public string? HostConnId { get; set; }
+    public int PlayerCount => _players.Count;
+
     public Room(string code, string levelId, LevelFile level)
     {
         Code = code;

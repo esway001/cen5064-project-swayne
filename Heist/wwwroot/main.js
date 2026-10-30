@@ -1,8 +1,6 @@
 ﻿import { SceneManager } from './core/SceneManager.js';
 import { NetworkClient } from './net/NetworkClient.js';
-//import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js'; //Don't need yet
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
-
 import { InputController } from './input/InputController.js';
 import { applyInput } from './shared/movement.js';
 
@@ -11,18 +9,45 @@ document.querySelectorAll(".homepage").forEach(btn =>
 );
 
 // submit login credentials -> stash identity and go to lobby
-document.getElementById('submitButton').addEventListener('click', () => {
+document.getElementById('submitButton').addEventListener('click', async () => {
     sessionStorage.setItem('playerName', document.getElementById('username').value || "Anon");
-    sessionStorage.setItem('roomCode', document.getElementById('roomCode').value || "LOBBY");
     showView('lobbyView');
+    await populateLevels();
+    await refreshRooms();
 })
 
-//enter game, read identity then join
-document.getElementById('enterGameBtn').addEventListener('click', async () => {
-    const playerName = sessionStorage.getItem('playerName') ?? "Anon";
-    const roomCode = sessionStorage.getItem('roomCode') ?? "LOBBY";
-    await net.join(roomCode, playerName);
-    showView('gameView');
+async function populateLevels() {
+    const levels = await net.listLevels();
+    document.getElementById('levelPicker').innerHTML =
+        levels.map(id => `<option value="${id}">${id}</option>`).join('');
+}
+
+async function refreshRooms() {
+    const rooms = await net.listOpenRooms();
+    document.getElementById('roomList').innerHTML = rooms.length
+        ? rooms.map(r => `<li>${r.code} · ${r.levelId} · ${r.playerCount}/4
+            <button class="joinBtn" data-code="${r.code}">Join</button></li>`).join('')
+        : '<li>No open games - create one.</li>';
+}
+
+//create game, stop in waiting room
+document.getElementById('createBtn').addEventListener('click', async () => {
+    const name = sessionStorage.getItem('playerName') ?? "Anon";
+    amHost = true;
+    const code = await net.createRoom(name, document.getElementById('levelPicker').value);
+    document.getElementById('roomCodeLabel').textContent = code;
+    showView('waitingView');
+})
+
+//join game (since the rows are dynamic, we gotta delegate) stay in waiitng room
+document.getElementById('roomList').addEventListener('click', async (e) => {
+    if (!e.target.classList.contains('joinBtn')) return;
+    const name = sessionStorage.getItem('playerName') ?? "Anon";
+    amHost = false;
+    const code = e.target.dataset.code;
+    document.getElementById('roomCodeLabel').textContent = code;
+    await net.join(code, name);
+    showView('waitingView');
 })
 
 const DEBUG_COLLIDERS = false;          //debug collider boxes on off
@@ -33,6 +58,8 @@ let pending = [];
 let last = "";
 let gameOver = false;
 let level = null;
+let amHost = false;
+const MIN_PLAYERS = 2;                  //CHANGE TO 1 FOR SOLO TESTING
 
 const playerName = sessionStorage.getItem('playerName') ?? "Anon";
 const roomCode = sessionStorage.getItem('roomCode') ?? "LOBBY";
@@ -52,7 +79,9 @@ function showView(name) {
 
 //Network Methods
 const net = new NetworkClient("/gameHub");
-window.net = net; //TEMPORARY CONSOLE TEST
+
+/******************************************/window.net = net; //TEMPORARY CONSOLE TEST/********************* */
+
 net.onWelcome(async(me, roster, levelId) => {
     const res = await fetch(`/levels/${levelId}.json`); 
     if (!res.ok) { alert("Couldn't load level"); window.location.href = "/"; return; }
@@ -100,6 +129,19 @@ net.onSnapshot(snap => {
     }
 });
 
+net.onRosterChanged(roster => {
+    document.getElementById('rosterList').innerHTML =
+        roster.map(p => `<li>${p.name}</li>`).join('');
+    const startBtn = document.getElementById('startBtn');
+    startBtn.hidden = !amHost;
+    startBtn.disabled = roster.length < MIN_PLAYERS;
+})
+
+document.getElementById('startBtn').addEventListener('click', () => net.startGame());
+
+net.onGameStarted(() => showView('gameView'));      //everyone swaps to the gameView once game starts
+// live-refresh on room changes
+net.onLobbyChanged(() => refreshRooms());
 
 //await net.join(roomCode, playerName);
 await net.connect();    //open on load
