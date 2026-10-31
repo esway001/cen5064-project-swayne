@@ -4,9 +4,9 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 import { InputController } from './input/InputController.js';
 import { applyInput } from './shared/movement.js';
 
-document.querySelectorAll(".homepage").forEach(btn =>
-    btn.addEventListener("click", () => { window.location.href = "/"; })
-);
+//document.querySelectorAll(".homepage").forEach(btn =>
+//    btn.addEventListener("click", () => { window.location.href = "/"; })
+//);
 
 // submit login credentials -> stash identity and go to lobby
 document.getElementById('submitButton').addEventListener('click', async () => {
@@ -29,6 +29,22 @@ async function refreshRooms() {
             <button class="joinBtn" data-code="${r.code}">Join</button></li>`).join('')
         : '<li>No open games - create one.</li>';
 }
+
+async function backToLobby() {
+    await net.leaveToLobby();
+    sceneManager.reset();
+    level = null;
+    pending = [];
+    predicted = { x: 0, z: 0 };
+    gameOver = false;
+    amHost = false;
+    document.getElementById("winBanner").hidden = true;
+    document.getElementById("loseBanner").hidden = true;
+    showView('lobbyView');
+    await refreshRooms();
+}
+
+document.querySelectorAll(".toLobby").forEach(btn => btn.addEventListener("click", backToLobby)); 
 
 //create game, stop in waiting room
 document.getElementById('createBtn').addEventListener('click', async () => {

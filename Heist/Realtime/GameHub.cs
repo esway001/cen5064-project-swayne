@@ -79,6 +79,17 @@ public class GameHub: Hub
 
     private Task BroadcastLobby() => Clients.All.SendAsync("LobbyChanged");
 
+    public async Task LeaveToLobby()
+    {
+        var code = _registry.RemoveConnection(Context.ConnectionId);    //drops player, tears down room when empty
+        if (code is null) return;
+        await Groups.RemoveFromGroupAsync(Context.ConnectionId, code);  //stop receiving room messages
+        await Clients.Group(code).SendAsync("PlayerLeft", Context.ConnectionId);    //message in room to players
+        var room = _registry.Get(code);
+        if (room is not null) await Clients.Group(code).SendAsync("RosterChanged", room.All);
+        await BroadcastLobby();
+    }
+
     //public void StartGame()
     //{
     //    _registry.RoomOf(Context.ConnectionId)?.StartGame();

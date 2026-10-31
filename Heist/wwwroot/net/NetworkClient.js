@@ -16,6 +16,7 @@
     startGame()                 { return this.connection.invoke("StartGame"); }
     onRosterChanged(cb)         { this.connection.on("RosterChanged", cb); }
     onGameStarted(cb)           { this.connection.on("GameStarted", cb); }
+    leaveToLobby()              { return this.connection.invoke("LeaveToLobby"); }
 
     async connect() { await this.connection.start(); }
     async join(code, name) {

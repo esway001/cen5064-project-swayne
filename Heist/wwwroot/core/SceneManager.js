@@ -11,6 +11,8 @@ export class SceneManager {
 
         // scene, camera, renderer
         this.scene = new THREE.Scene();
+        this.world = new THREE.Group();
+        this.scene.add(this.world);
         this.camera = this.createCamera();
         this.renderer = this.createRenderer();
         this.players = new Map();
@@ -123,7 +125,7 @@ export class SceneManager {
         );
         //set posiiton
         mesh.position.set(p.x, p.y, p.z);
-        this.scene.add(mesh);
+        this.world.add(mesh);
         this.players.set(p.id, mesh);
     }
 
@@ -140,13 +142,13 @@ export class SceneManager {
                 (w.minY + w.maxY) / 2,
                 (w.minZ + w.maxZ) / 2);
             
-            this.scene.add(mesh);
+            this.world.add(mesh);
         }
     }
 
     removePlayer(id) {
         const mesh = this.players.get(id);
-        if (mesh) { this.scene.remove(mesh); this.players.delete(id); }
+        if (mesh) { this.world.remove(mesh); this.players.delete(id); }
     }
 
     setSelf(pos) {
@@ -188,7 +190,7 @@ export class SceneManager {
             new THREE.MeshBasicMaterial({ color: 0xffd700 }) //golden color
         );
         mesh.position.set(obj.x, 0.75, obj.z);
-        this.scene.add(mesh);
+        this.world.add(mesh);
     }
 
     buildHazards(hazards) {
@@ -206,7 +208,7 @@ export class SceneManager {
             const mesh = new THREE.Mesh(geo, mat);
             mesh.rotation.x = -Math.PI / 2;                 //rotate to make it live horizontally
             mesh.position.set((h.minX + h.maxX) / 2, 0.02, (h.minZ + h.maxZ) / 2);  //lift to prevent z-fighting
-            this.scene.add(mesh);
+            this.world.add(mesh);
             this.hazardMeshes.push(mesh);
         }
     }
@@ -230,7 +232,7 @@ export class SceneManager {
         }
         const model = gltf.scene;                               // the model is the gltf.scene
         model.position.set(pos.x, pos.y, pos.z);                // change vector3, give position to model
-        this.scene.add(model);                                  // add model to scene
+        this.world.add(model);                                  // add model to scene
 
         model.traverse(obj => {                                             //hide the markers
             if (MARKER_PREFIXES.some(p => obj.name.startsWith(p))) obj.visible = false;
@@ -252,6 +254,17 @@ export class SceneManager {
         const dirLight = new THREE.DirectionalLight(dirColor, hemiIntensity);
         dirLight.position.set(5, 10, 7);
         this.scene.add(dirLight);
+    }
+
+    reset() {
+        this.scene.remove(this.world);
+        this.world = new THREE.Group();
+        this.scene.add(this.world);
+        this.players.clear();
+        this.buffers.clear();
+        this.hazardMeshes = [];
+        this.myId = null;
+        this.selfTarget = null;
     }
 
 };
