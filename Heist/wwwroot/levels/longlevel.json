@@ -1,0 +1,158 @@
+{
+  "formatVersion": 1,
+  "walls": [
+    {
+      "name": "collider_test",
+      "minX": -7.791644,
+      "maxX": 9.800296,
+      "minY": 0,
+      "maxY": 2,
+      "minZ": 7,
+      "maxZ": 8
+    },
+    {
+      "name": "collider_testb",
+      "minX": -7.791644,
+      "maxX": 9.800296,
+      "minY": 0,
+      "maxY": 2,
+      "minZ": -6,
+      "maxZ": -5
+    },
+    {
+      "name": "collider_test.001",
+      "minX": -8.8,
+      "maxX": -7.7999997,
+      "minY": 0,
+      "maxY": 2,
+      "minZ": -6.79597,
+      "maxZ": 10.79597
+    },
+    {
+      "name": "collider_testb.001",
+      "minX": 9.813752,
+      "maxX": 27.405693,
+      "minY": 0,
+      "maxY": 2,
+      "minZ": -6,
+      "maxZ": -5
+    },
+    {
+      "name": "collider_testb.002",
+      "minX": 9.813752,
+      "maxX": 27.405693,
+      "minY": 0,
+      "maxY": 2,
+      "minZ": 6.9987082,
+      "maxZ": 7.9987082
+    },
+    {
+      "name": "collider_testb.003",
+      "minX": 27.403942,
+      "maxX": 44.995884,
+      "minY": 0,
+      "maxY": 2,
+      "minZ": 6.9987082,
+      "maxZ": 7.9987082
+    },
+    {
+      "name": "collider_testb.004",
+      "minX": 27.403942,
+      "maxX": 44.995884,
+      "minY": 0,
+      "maxY": 2,
+      "minZ": -5.9975686,
+      "maxZ": -4.9975686
+    },
+    {
+      "name": "collider_testb.005",
+      "minX": -2.1017532,
+      "maxX": 5.022941,
+      "minY": 0,
+      "maxY": 2,
+      "minZ": 0.8838523,
+      "maxZ": 1.3167102
+    },
+    {
+      "name": "collider_doorA",
+      "minX": 5.068676,
+      "maxX": 5.5015345,
+      "minY": 0.045564592,
+      "maxY": 2.0455647,
+      "minZ": -4.961023,
+      "maxZ": 1.0652617
+    },
+    {
+      "name": "collider_doorB",
+      "minX": 5.068676,
+      "maxX": 5.5015345,
+      "minY": 0.045564592,
+      "maxY": 2.0455647,
+      "minZ": 1.0879993,
+      "maxZ": 6.9695616
+    }
+  ],
+  "hazards": [
+    {
+      "name": "hazard_strip",
+      "minX": 16.835907,
+      "maxX": 17.835907,
+      "minY": -1.1175871E-08,
+      "maxY": 0.10000001,
+      "minZ": -4.862444,
+      "maxZ": 6.8630705,
+      "safeMs": 5000,
+      "armedMs": 10000
+    },
+    {
+      "name": "hazard_stripB",
+      "minX": 20.096106,
+      "maxX": 22.29241,
+      "minY": -1.1175871E-08,
+      "maxY": 0.10000001,
+      "minZ": -4.8624434,
+      "maxZ": 6.86307,
+      "safeMs": 3000,
+      "armedMs": 6000
+    },
+    {
+      "name": "hazard_stripC",
+      "minX": 24.324593,
+      "maxX": 30.72335,
+      "minY": -1.1175871E-08,
+      "maxY": 0.10000001,
+      "minZ": -4.8624434,
+      "maxZ": 6.86307,
+      "safeMs": 5000,
+      "armedMs": 10000
+    }
+  ],
+  "spawns": [
+    {
+      "name": "spawn_1",
+      "x": -5.421636,
+      "z": -2.674674
+    },
+    {
+      "name": "spawn_2",
+      "x": -5.530069,
+      "z": -0.10843273
+    },
+    {
+      "name": "spawn_3",
+      "x": -5.4939246,
+      "z": 2.7831068
+    },
+    {
+      "name": "spawn_4",
+      "x": -5.385492,
+      "z": 5.1324825
+    }
+  ],
+  "objective": {
+    "name": "objective",
+    "x": 40.626125,
+    "z": 0,
+    "radius": 0.75
+  }
+}

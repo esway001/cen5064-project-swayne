@@ -4,6 +4,9 @@
 <head>
     <meta charset="utf-8" />
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Archivo+Black&family=Orbitron:wght@400..900&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="/styles.css" />
     <!-- We are using v0.185.1, this script imports from a CDN-->
     <script type="importmap">
@@ -29,7 +32,6 @@
                     <input type="text" class="form-control" id="username" aria-describedby="userHelp" />
                     <small id="userHelp" class="form-text text-muted">Username is used to log in and acts as player name</small>
                     <br />
-                    <input id="roomCode" placeholder="Room code (e.g. A7KQ)" />
                     <button type="button" id="submitButton" class="btn btn-primary">Login</button>
                 </div>
             </form>
@@ -38,10 +40,28 @@
 
     <div id="lobbyView" hidden>
         <h2>Lobby</h2>
-        <button id="enterGameBtn">Enter Game (temp)</button>
+        <label>Level: <select id="levelPicker"></select></label>
+        <button id="createBtn">Create Game</button>
+        <h3>Open Games</h3>
+        <ul id="roomList"></ul>
     </div>
 
-    <div id="waitingView" hidden></div>
+    <div id="waitingView" hidden>
+        <h2>Waiting Room</h2>
+        <p>Room code: <span id="roomCodeLabel"></span></p>
+        <div id="waitingGrid">
+            <div id="rosterPanel" class="wPanel">
+                <h3>Players</h3>
+                <ul id="rosterList"></ul>
+            </div>
+            <div id="chatPanel" class="wPanel">
+                <h3>Chat</h3>
+                <div id="chatBox">TBD</div>
+            </div>
+        </div>
+
+        <button id="startBtn" hidden>Start Game</button>
+    </div>
 
     <div id="gameView" hidden>
         <!--TOP BAR-->
@@ -55,11 +75,11 @@
         <canvas id="heist-canvas"></canvas>
         <div id="winBanner" hidden>
             <div class="win-card">Heist Complete</div>
-            <button id="homepageWin" class="homepage">Return to HomePage</button>
+            <button class="toLobby">Back to Lobby</button>
         </div>
         <div id="loseBanner" hidden>
             <div class="lose-card">Heist Failed</div>
-            <button id="homepage" class="homepage">Return to HomePage</button>
+            <button class="toLobby">Back to Lobby</button>
         </div>
     </div>
     <!--SignalR CDN-->
