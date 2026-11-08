@@ -1,6 +1,6 @@
 ﻿import { SceneManager } from './core/SceneManager.js';
 import { NetworkClient } from './net/NetworkClient.js';
-import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+//import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 import { InputController } from './input/InputController.js';
 import { applyInput } from './shared/movement.js';
 
@@ -75,7 +75,7 @@ let last = "";
 let gameOver = false;
 let level = null;
 let amHost = false;
-const MIN_PLAYERS = 2;                  //CHANGE TO 1 FOR SOLO TESTING
+const MIN_PLAYERS = 1;                  //CHANGE TO 1 FOR SOLO TESTING
 
 const playerName = sessionStorage.getItem('playerName') ?? "Anon";
 const roomCode = sessionStorage.getItem('roomCode') ?? "LOBBY";
@@ -84,7 +84,8 @@ const myCanvas = document.querySelector('#heist-canvas');
 
 //init scenemanager
 const sceneManager = new SceneManager(myCanvas);
-const controls = new OrbitControls(sceneManager.camera, sceneManager.renderer.domElement);
+sceneManager.enableMouseLook();
+//const controls = new OrbitControls(sceneManager.camera, sceneManager.renderer.domElement);
 
 //view switcher
 function showView(name) {
@@ -161,6 +162,7 @@ net.onLobbyChanged(() => refreshRooms());
 
 //await net.join(roomCode, playerName);
 await net.connect();    //open on load
+await sceneManager.loadCharacterTemplate('/assets/PirateCook.glb'); 
 showView('loginView');  //land in login
 
 window.addEventListener('resize', () => sceneManager.onWindowResize());
@@ -172,7 +174,7 @@ function animate() {
     const intent = input.getIntent();
     const sig = `${intent.x},${intent.z}`;
     if (sig !== last) { console.log("intent", intent); last = sig; }
-    controls.update();
+    //controls.update();
 
     //update scenemanager
     sceneManager.update();
@@ -189,8 +191,25 @@ let seq = 0;
 setInterval(() => {
     if (gameOver) return;   //stop sending input if game is over)
     if (!level) return;     //level not loaded
-    const intent = input.getIntent();
-    const cmd = { seq: seq++, x: intent.x, z: intent.z };
+
+    const raw = input.getIntent();      //camera-relative cointrol: x = strafe, z = forward/back
+    const rx = Number.isFinite(raw?.x) ? -raw.x : 0; //flip x and y
+    const rz = Number.isFinite(raw?.z) ? -raw.z : 0; 
+    let yaw = sceneManager.getCameraYaw();
+    if (!Number.isFinite(yaw)) yaw = 0;     //guard against NaN yaw
+
+    const s = Math.sin(yaw), c = Math.cos(yaw);
+    let x = rx * c + rz * s;        //rotate input by camera yaw
+    let z = -rx * s + rz * c;
+
+    if (!Number.isFinite(x) || !Number.isFinite(z)) {       // never send NaN
+        if (!window._warnedNaN) { console.warn("clamped", raw, yaw); window._warnedNaN = true; }
+        x = 0; z = 0;
+    }
+
+    //const intent = input.getIntent();
+    const cmd = { seq: seq++, x, z };       //server and share unchanged, but world space intent
+    
     pending.push(cmd);
     predicted = applyInput(predicted, cmd, level.walls); //prediction
     sceneManager.setSelf(predicted);        //move box instantly

@@ -1,10 +1,19 @@
 ﻿import * as THREE from 'three';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 import { DRACOLoader } from 'three/addons/loaders/DRACOLoader.js';
+import { clone as skeletonClone } from 'three/addons/utils/SkeletonUtils.js'; 
+console.log("MAIN BUILD 3");
 
 const PLAYER_COLORS = { 1: 0xff0000, 2: 0x1656AD, 3: 0x008000, 4: 0xF0C807 };
 const MARKER_PREFIXES = ['collider_', 'hazard_', 'spawn_', 'objective'];
 const INTERP_DELAY = 100; //100ms delay
+const CHAR_SCALE = 1;
+const MODEL_YAW_OFFSET = +Math.PI / 2; //model is facing right, rotate to face forward
+
+//helper function to find a clip by keywords, returns null if not found
+function findClip(clips, keywords) {
+    return clips?.find(c => keywords.some(k => c.name.toLowerCase().includes(k))) ?? null;
+}
 export class SceneManager {
     constructor(canvas) {
         this.canvas = canvas;
@@ -18,6 +27,7 @@ export class SceneManager {
         this.players = new Map();
         this.buffers = new Map();   //player list of timestamp samples
         this.myId = null;
+        this.clock = new THREE.Clock();
         this.selfTarget = null;
         this.gltfLoader = new GLTFLoader();
         this.draco = new DRACOLoader();
@@ -94,6 +104,15 @@ export class SceneManager {
             selfMesh.position.x += (this.selfTarget.x - selfMesh.position.x) * k;
             selfMesh.position.z += (this.selfTarget.z - selfMesh.position.z) * k;
         }
+
+        //face movement since model is turned 90 degrees.
+        const dt = this.clock.getDelta();
+        for (const mesh of this.players.values()) {
+            mesh.userData.mixer?.update(dt);
+            this.faceMovement(mesh);
+        }
+
+        this.updateCamera();
         //Render Scene
         this.renderer.render(this.scene, this.camera);
     }
@@ -115,19 +134,45 @@ export class SceneManager {
      * */
 
     addPlayer(p) {
-        //we can later replace this mesh with a model from blender
-        const color = PLAYER_COLORS[p.number] ?? 0xffffff;
-        const geo = new THREE.BoxGeometry(1, 1, 1);
-        geo.translate(0, 0.5, 0);               //lift bottom off 0
-        const mesh = new THREE.Mesh(
-            geo,
-            new THREE.MeshBasicMaterial({ color })
+        const container = new THREE.Group();
+
+        if (this.characterTemplate) {
+            const model = skeletonClone(this.characterTemplate);
+            model.scale.setScalar(CHAR_SCALE);
+            model.rotation.y = MODEL_YAW_OFFSET;
+            container.add(model);
+
+            if (this.characterClips?.length) {
+                const mixer = new THREE.AnimationMixer(model);
+                const idleClip = THREE.AnimationClip.findByName(this.characterClips, 'Crouch_Idle');
+                const walkClip = THREE.AnimationClip.findByName(this.characterClips, 'Crouch_Walk');
+                container.userData.mixer = mixer;
+                container.userData.actions = {
+                    idle: idleClip ? mixer.clipAction(idleClip) : null,
+                    walk: walkClip ? mixer.clipAction(walkClip) : null
+                };
+                container.userData.anim = 'idle';
+                container.userData.actions.idle?.play();
+            }
+        } else {
+            const geo = new THREE.BoxGeometry(1, 1, 1);
+            geo.translate(0, 0.5, 0);
+            container.add(new THREE.Mesh(geo, new THREE.MeshBasicMaterial({ color: 0xffffff })));
+        }
+
+        const ring = new THREE.Mesh(
+            new THREE.RingGeometry(0.4, 0.6, 24),
+            new THREE.MeshBasicMaterial({ color: PLAYER_COLORS[p.number] ?? 0xffffff, side: THREE.DoubleSide })
         );
-        //set posiiton
-        mesh.position.set(p.x, p.y, p.z);
-        this.world.add(mesh);
-        this.players.set(p.id, mesh);
+        ring.rotation.x = -Math.PI / 2;
+        ring.position.y = 0.02;
+        container.add(ring);
+
+        container.position.set(p.x, p.y, p.z);
+        this.world.add(container);
+        this.players.set(p.id, container);
     }
+        
 
     buildLevel(walls) {
         for (const w of walls) {
@@ -242,6 +287,17 @@ export class SceneManager {
         return model;                                           // give caller loaded object
     }
 
+    async loadCharacterTemplate(url) {
+        try {
+            const gltf = await this.gltfLoader.loadAsync(url);
+            this.characterTemplate = gltf.scene;
+            this.characterClips = gltf.animations;
+            console.log('[character] clips:', gltf.animations.map(a => a.name));    //temporary
+        } catch (err) {
+            console.error('[character] failed to load ', url, err);
+        }
+    }
+
     addLights() {
         const skyColor = 0xffffff;
         const dirColor = 0xffffff;
@@ -266,5 +322,65 @@ export class SceneManager {
         this.myId = null;
         this.selfTarget = null;
     }
+
+    //helper function to interpolate angles correctly
+    lerpAngle(a, b, t) {
+        let diff = b - a;
+        while (diff > Math.PI) diff -= 2 * Math.PI;
+        while (diff < -Math.PI) diff += 2 * Math.PI;
+        return a + diff * t;
+    }
+
+    faceMovement(container) {
+        const dx = container.position.x - (container.userData.lastX ?? container.position.x);
+        const dz = container.position.z - (container.userData.lastZ ?? container.position.z);
+        container.userData.lastX = container.position.x;
+        container.userData.lastZ = container.position.z;
+
+        const moving = dx * dx + dz * dz > 1e-6; //check if moving, avoid jitter
+        if (moving) {             //during movement, avoid jitter
+            const target = Math.atan2(dx, dz) - MODEL_YAW_OFFSET; //atan2(y,x) gives angle in radians
+            container.rotation.y = this.lerpAngle(container.rotation.y, target, 0.25); // 0.25 is turn speed
+        }
+
+        const actions = container.userData.actions;
+        if (actions) {
+            const want = moving ? 'walk' : 'idle';
+            if (container.userData.anim !== want && actions[want]) {
+                actions[want].reset().fadeIn(0.2).play();
+                const prev = actions[container.userData.anim];
+                if (prev && prev !== actions[want]) prev.fadeOut(0.2);
+                container.userData.anim = want;
+            }
+        }
+    }
+
+    enableMouseLook() {
+        this.camYaw = 0;
+        this.canvas.addEventListener('click', () => this.canvas.requestPointerLock());
+        document.addEventListener('mousemove', (e) => {
+            if (document.pointerLockElement !== this.canvas) return;
+            this.camYaw -= (e.movementX || 0) * 0.0025;        //sensitivity, also added || 0 to guard against null movementX
+            console.log('camYaw', this.camYaw, 'movementX', e.movementX);
+        });
+    }
+
+    getCameraYaw() {
+        return Number.isFinite(this.camYaw) ? this.camYaw : 0;      //guard against NaN, return 0 if not finite
+    }
+
+    updateCamera() {
+        const self = this.players.get(this.myId);
+        if (!self) return;
+        const dist = 6, height = 3;
+        const fx = Math.sin(this.camYaw), fz = Math.cos(this.camYaw);
+        this.camera.position.set(
+            self.position.x - fx * dist,        //sit behind player
+            self.position.y + height,
+            self.position.z - fz * dist
+        );
+        this.camera.lookAt(self.position.x, self.position.y + 1, self.position.z);
+    }
+
 
 };
