@@ -75,6 +75,7 @@ let last = "";
 let gameOver = false;
 let level = null;
 let amHost = false;
+let doorOpen = [];
 const MIN_PLAYERS = 1;                  //CHANGE TO 1 FOR SOLO TESTING
 
 const playerName = sessionStorage.getItem('playerName') ?? "Anon";
@@ -107,6 +108,7 @@ net.onWelcome(async(me, roster, levelId) => {
     if(DEBUG_COLLIDERS)sceneManager.buildLevel(level.walls);        //debug only
     sceneManager.buildObjective(level.objective);                   //gameplay goal
     sceneManager.buildHazards(level.hazards);                       //armed safe feedback
+    sceneManager.buildDoors(level.doors ?? []);                           //doors
     sceneManager.loadModel(`/assets/${levelId}.glb`);
 
     sceneManager.myId = me.id;
@@ -124,15 +126,17 @@ net.onPlayerLeft(id => sceneManager.removePlayer(id));
 net.onSnapshot(snap => {
     //guard
     if (!level) return;
+    doorOpen = snap.doors ?? [];
     const me = snap.players.find(p => p.id === sceneManager.myId);
     if (me) {
         predicted = { x: me.x, z: me.z };                   //1. snap to recieved server pos
         pending = pending.filter(c => c.seq > me.lastSeq);  //2. drop our acknowledged seq
-        for (const c of pending) predicted = applyInput(predicted, c, level.walls); //3. replay
+        for (const c of pending) predicted = applyInput(predicted, c, currentSolids()); //3. replay
         sceneManager.setSelf(predicted);
     }
     sceneManager.receiveSnapshot(snap.players); //remotes
     sceneManager.setHazardStates(snap.traps);
+    sceneManager.setDoors(snap.doors ?? []);
     //console.log("state:", snap.state);          // lets test before making UI
 
     //simple win banner UI, if the server sends a "Won" state, we show the win banner
@@ -180,6 +184,13 @@ function animate() {
     sceneManager.update();
 }
 
+function currentSolids() {
+    if (!level) return [];
+    const doors = level.doors ?? [];
+    const closed = doors.filter((d, i) => !doorOpen[i]); //closed doors
+    return closed.length ? level.walls.concat(closed) : level.walls;
+}
+
 animate();
 let seq = 0;
 // setInterval(() => {
@@ -211,7 +222,7 @@ setInterval(() => {
     const cmd = { seq: seq++, x, z };       //server and share unchanged, but world space intent
     
     pending.push(cmd);
-    predicted = applyInput(predicted, cmd, level.walls); //prediction
+    predicted = applyInput(predicted, cmd, currentSolids()); //prediction
     sceneManager.setSelf(predicted);        //move box instantly
     net.sendInput(cmd);
 }, 50);

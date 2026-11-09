@@ -18,6 +18,10 @@ public class Room
         LevelId = levelId;
         _level = level;
         _trapArmed = new bool[level.Hazards.Count];
+        _doors = level.Doors ?? Array.Empty<DoorData>();
+        _triggers = level.Triggers ?? Array.Empty<TriggerData>();
+        _doorOpen = new bool[_doors.Count]; //all doors start closed
+        _doorTimer = new float[_doors.Count]; 
 
     }
 
@@ -40,7 +44,14 @@ public class Room
 
     private double _elapsedMs;
     private readonly bool[] _trapArmed; //= new bool[Level.Hazards.Length]; // moved to ctor
+    private readonly IReadOnlyList<DoorData> _doors;
+    private readonly IReadOnlyList<TriggerData> _triggers;
+    private readonly bool[] _doorOpen;
+    private readonly float[] _doorTimer;
+
     public IReadOnlyList<bool> TrapStates => _trapArmed;            //reported by snapshot
+    public IReadOnlyList<DoorData> Doors => _doors;
+    public IReadOnlyList<bool> DoorOpen => _doorOpen;
 
     public GameState State { get; private set; } = GameState.Playing;
 
@@ -86,12 +97,42 @@ public class Room
 
         _elapsedMs += dt * 1000.0;
 
+
+        //Clarifying comment: loop arms hazards
         for (int i = 0; i < _level.Hazards.Count; i++)
         {
             var h = _level.Hazards[i];
             var cycle = h.SafeMs + h.ArmedMs;
             var t = _elapsedMs % cycle;
             _trapArmed[i] = t >= h.SafeMs;          //safe then armed
+        }
+
+        //Triggers and doors
+        for (int d = 0; d < _doors.Count; d++)
+        {
+            var door = _doors[d];
+            bool hasController = false;
+            bool allSatisfied = true;
+
+            foreach (var t in _triggers)
+            {
+                if (!t.Targets.Contains(door.name)) continue; //skip triggers that don't control this door
+                hasController = true;
+                if(!TriggerSatisfied(t)) { allSatisfied = false; break; }
+            }
+
+            bool conditionMet = hasController && allSatisfied; //if no controller, door stays closed, if has controller, all must be satisfied
+
+            if (conditionMet)
+            {
+                _doorOpen[d] = true;
+                _doorTimer[d] = door.CloseDelayMs;//hold open, grace timer reset
+            }
+            else if (_doorOpen[d])
+            {
+                _doorTimer[d] -= dt * 1000f;
+                if (_doorTimer[d] <= 0f) _doorOpen[d] = false;
+            }
         }
 
         foreach (var (id, p) in _players)
@@ -127,17 +168,6 @@ public class Room
         //for each player, if they step inside the hazard, end the game as a loss
         foreach (var p in _players.Values)
         {
-            //replace old loop with loop for blender level
-            //for (int i = 0; i< Level.Hazards.Length; i++)
-            //{
-            //    if (!_trapArmed[i]) continue;
-            //    var h = Level.Hazards[i];
-            //    if(p.X >= h.MinX - Level.PlayerRadius && p.X <= h.MaxX + Level.PlayerRadius && p.Z >= h.MinZ - Level.PlayerRadius && p.Z <= h.MaxZ + Level.PlayerRadius)
-            //    {
-            //        State = GameState.Lost;
-            //        return;                             //room is done, don't win check
-            //    }
-            //}
             for (int i =0; i< _level.Hazards.Count; i++)
             {
                 if (!_trapArmed[i]) continue;
@@ -178,17 +208,33 @@ public class Room
     private bool HitsAny(float x, float z)
     {
         foreach (var w in _level.Walls)
-            if (HitsWall(x, z, w)) return true;
+            if (HitsBox(x, z, w.MinX, w.MaxX, w.MinZ, w.MaxZ)) return true;
+
+        for (int d = 0; d < _doors.Count; d++)
+            if (!_doorOpen[d])
+            {
+                var door = _doors[d];
+                if (HitsBox(x, z, door.MinX, door.MaxX, door.MinZ, door.MaxZ)) return true;
+            }
         return false;
     }
 
-    private bool HitsWall(float x, float z, WallData w)
+    private bool HitsBox(float x, float z, float minX, float maxX, float minZ, float maxZ)
     {
-        // check for the closest point on the box to x,z
-        float cx = MathF.Max(w.MinX, MathF.Min(x, w.MaxX));
-        float cz = MathF.Max(w.MinZ, MathF.Min(z, w.MaxZ));
+        float cx = MathF.Max(minX, MathF.Min(x, maxX));
+        float cz = MathF.Max(minZ, MathF.Min(z, maxZ));
         float dx = x - cx, dz = z - cz;
         return dx * dx + dz * dz < Level.PlayerRadius * Level.PlayerRadius;
+    }
+
+    private bool TriggerSatisfied(TriggerData t)
+    {
+        int need = t.Requires <= 0 ? 1 : t.Requires;
+        int count = 0;
+        foreach(var p in _players.Values)
+            if (p.X >= t.MinX && p.X <= t.MaxX && p.Z >= t.MinZ && p.Z <= t.MaxZ)
+                count++;
+        return count >= need;
     }
 }
 
