@@ -72,26 +72,50 @@
       "maxY": 2,
       "minZ": 0.8838523,
       "maxZ": 1.3167102
-    },
-    {
-      "name": "collider_doorA",
-      "minX": 5.068676,
-      "maxX": 5.5015345,
-      "minY": 0.045564592,
-      "maxY": 2.0455647,
-      "minZ": -4.961023,
-      "maxZ": 1.0652617
-    },
-    {
-      "name": "collider_doorB",
-      "minX": 5.068676,
-      "maxX": 5.5015345,
-      "minY": 0.045564592,
-      "maxY": 2.0455647,
-      "minZ": 1.0879993,
-      "maxZ": 6.9695616
     }
   ],
+  "doors": [
+  {
+    "name": "collider_doorA",
+    "minX": 5.068676, "maxX": 5.5015345,
+    "minY": 0.045564592, "maxY": 2.0455647,
+    "minZ": -4.961023, "maxZ": 1.0652617,
+    "closeDelayMs": 1500
+  },
+{
+    "name": "collider_doorB",
+    "minX": 5.068676, "maxX": 5.5015345,
+    "minY": 0.045564592, "maxY": 2.0455647,
+    "minZ": 1.0879993, "maxZ": 6.9695616,
+    "closeDelayMs": 1500
+  }
+],
+"triggers": [
+  {
+    "name": "button_a",
+    "type": "plate",
+    "minX": 1.487, "maxX": 2.487,
+    "minZ": -2.548, "maxZ": -1.548,
+    "requires": 1,
+    "targets": ["collider_doorA"]
+  },
+  {
+    "name": "button_b",
+    "type": "plate",
+    "minX": 1.487, "maxX": 2.487,
+    "minZ": 3.646, "maxZ": 4.646,
+    "requires": 1,
+    "targets": ["collider_doorA"]
+  },
+{
+  "name": "button_c",
+  "type": "plate",
+  "minX": 8.078, "maxX": 9.078,
+  "minZ": -2.548, "maxZ": -1.548,
+  "requires": 1,
+  "targets": ["collider_doorB"]
+}
+],
   "hazards": [
     {
       "name": "hazard_strip",

@@ -33,7 +33,7 @@ public class GameLoop : BackgroundService
                 try
                 {
                     room.Step(dt);
-                    var snap = new Snapshot(room.State, room.All, room.TrapStates);
+                    var snap = new Snapshot(room.State, room.All, room.TrapStates, room.DoorOpen);
                     await _hub.Clients.Group(room.Code).SendAsync("Snapshot", snap, ct);
                 }
                 catch (Exception ex) when (ex is not OperationCanceledException)

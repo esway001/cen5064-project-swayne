@@ -32,6 +32,11 @@ export class SceneManager {
         this.gltfLoader = new GLTFLoader();
         this.draco = new DRACOLoader();
         this.addLights();
+        this.doorDefs = [];
+        this.doorNodes = [];
+        this.doorBaseY = [];
+        this.doorTargetY = [];
+        this.doorLift = [];
     }
 
     /**
@@ -112,6 +117,10 @@ export class SceneManager {
             this.faceMovement(mesh);
         }
 
+        for (let i = 0; i < this.doorNodes.length; i++) {
+            const node = this.doorNodes[i];
+            if (node) node.position.y += (this.doorTargetY[i] - node.position.y) * 0.15; //smooth door movement
+        }
         this.updateCamera();
         //Render Scene
         this.renderer.render(this.scene, this.camera);
@@ -258,6 +267,14 @@ export class SceneManager {
         }
     }
 
+    buildDoors(doors) {
+        this.doorDefs = doors;
+        this.doorNodes = new Array(doors.length).fill(null);
+        this.doorBaseY = new Array(doors.length).fill(0);
+        this.doorTargetY = new Array(doors.length).fill(0);
+        this.doorLift = doors.map(d => (d.maxY - d.minY) + 0.1); // small offset to prevent z-fighting
+    }
+
     setHazardStates(armedFlags) {
         this.hazardMeshes.forEach((m, i) => {
             const armed = armedFlags[i];
@@ -281,6 +298,18 @@ export class SceneManager {
 
         model.traverse(obj => {                                             //hide the markers
             if (MARKER_PREFIXES.some(p => obj.name.startsWith(p))) obj.visible = false;
+        });
+        // grab door art nodes so we can raise them when open (collider_doorA -> wall_doorA)
+        this.doorDefs?.forEach((d, i) => {
+            const artName = 'wall_' + d.name.replace('collider_', '');
+            const node = model.getObjectByName(artName);
+            if (node) {
+                this.doorNodes[i] = node;
+                this.doorBaseY[i] = node.position.y;
+                this.doorTargetY[i] = node.position.y;   // start closed
+            } else {
+                console.warn('[door] art node not found:', artName);
+            }
         });
         const box3 = new THREE.Box3().setFromObject(model);
         console.log('[GLB] min: ', box3.min, ' max: ', box3.max);
@@ -321,6 +350,19 @@ export class SceneManager {
         this.hazardMeshes = [];
         this.myId = null;
         this.selfTarget = null;
+        this.doorDefs = [];
+        this.doorNodes = [];
+        this.doorBaseY = [];
+        this.doorTargetY = [];
+        this.doorLift = [];
+    }
+
+    setDoors(openFlags) {
+        if (!this.doorDefs) return;
+        for (let i = 0; i < this.doorDefs.length; i++) {
+            const open = !!openFlags?.[i];
+            this.doorTargetY[i] = this.doorBaseY[i] + (open ? this.doorLift[i] : 0);
+        }
     }
 
     //helper function to interpolate angles correctly
