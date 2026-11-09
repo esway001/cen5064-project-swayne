@@ -19,23 +19,28 @@ motivations include a desire to strengthen my Three.js and 3D web dev skills, wo
 
 ## How to run
 ### PART 1
-For now, if you decide you want to run what I have so far, clone or download zip and unzip. Open command prompt:
-```
-CD unzipped Directory
-CD /Heist
-dotnet run
-```
+## Prerequisites
+- .NET 8 SDK (ASP.NET Core 8). Verify: `dotnet --version` -> 8.x.
+
+## Run the program
+cd <unzipped-folder>/Heist
+dotnet run --launch-profile https
+
+Open https://localhost:7159 and accept the dev-cert warning
+(or run `dotnet dev-certs https --trust` once to avoid it).
+
 Open two browser windows:
 First Browser window: go to localhost:7159/
 You should now be in login page, login with random name
-you should see a spawned box.
-press F12 to open Dev Tools, click "console" tab
-Here you can see object properties and welcome message for success.
+You now see the Lobby, you can create or join a game.
+Create a game. Wait for player 2 to join.
+Player 2 joins, start game.
+You should now see the level and are able to move in the game. 
+Win or Lose should allow you to return to the lobby.
 
 Second browser: go to localhost:7159/
 Login with another name
-now both windows should have two boxes spawned
-in first browser you should see that another "player" has joined" and see their object properties
+Join the game the first browser window created. Wait for start
 If having trouble, please see me so I can train you on how to use cmd, dev tools, etc.
 
 ```
