@@ -3,18 +3,34 @@ import { NetworkClient } from './net/NetworkClient.js';
 //import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 import { InputController } from './input/InputController.js';
 import { applyInput } from './shared/movement.js';
+import { supabase } from './auth/supabaseClient.js';
 
 //document.querySelectorAll(".homepage").forEach(btn =>
 //    btn.addEventListener("click", () => { window.location.href = "/"; })
 //);
 
 // submit login credentials -> stash identity and go to lobby
-document.getElementById('submitButton').addEventListener('click', async () => {
-    sessionStorage.setItem('playerName', document.getElementById('username').value || "Anon");
-    showView('lobbyView');
-    await populateLevels();
-    await refreshRooms();
-})
+
+document.getElementById('logoutBtn').addEventListener('click', async () => {
+    await supabase.auth.signOut();
+    sessionStorage.removeItem('playerName');
+    location.reload();
+});
+
+document.getElementById('loginForm').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const email = document.getElementById('loginEmail').value.trim();
+    const password = document.getElementById('loginPassword').value;
+    const statusEl = document.getElementById('loginStatus');
+    statusEl.textContent = '';
+
+    const { data, error } = await supabase.auth.signInWithPassword({ email, password });
+    if (error) { statusEl.textContent = error.message; return; }
+
+    const username = data.user?.user_metadata?.username ?? 'Anon';
+    sessionStorage.setItem('playerName', username);   // the game already reads this
+    await enterLobby();
+});
 
 async function populateLevels() {
     const levels = await net.listLevels();
@@ -41,6 +57,12 @@ async function backToLobby() {
     document.getElementById("winBanner").hidden = true;
     document.getElementById("loseBanner").hidden = true;
     showView('lobbyView');
+    await refreshRooms();
+}
+
+async function enterLobby() {
+    showView('lobbyView');
+    await populateLevels();
     await refreshRooms();
 }
 
@@ -167,7 +189,14 @@ net.onLobbyChanged(() => refreshRooms());
 //await net.join(roomCode, playerName);
 await net.connect();    //open on load
 await sceneManager.loadCharacterTemplate('/assets/PirateCook.glb'); 
-showView('loginView');  //land in login
+//showView('loginView');  //land in login
+const { data: { session } } = await supabase.auth.getSession();
+if (session) {
+    sessionStorage.setItem('playerName', session.user?.user_metadata?.username ?? 'Anon');
+    await enterLobby();
+} else {
+    showView('loginView');
+}
 
 window.addEventListener('resize', () => sceneManager.onWindowResize());
 
