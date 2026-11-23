@@ -1,7 +1,14 @@
-﻿export class NetworkClient {
+﻿import { supabase } from '../auth/supabaseClient.js';
+
+export class NetworkClient {
     constructor(url) {
         this.connection = new signalR.HubConnectionBuilder()
-            .withUrl(url)
+            .withUrl(url, {
+                accessTokenFactory: async () => {
+                    const { data: session } = await supabase.auth.getSession();
+                    return session?.session?.access_token || '';
+                }
+            })
             .withAutomaticReconnect()
             .build();
     }
@@ -18,7 +25,10 @@
     onGameStarted(cb)           { this.connection.on("GameStarted", cb); }
     leaveToLobby()              { return this.connection.invoke("LeaveToLobby"); }
 
-    async connect() { await this.connection.start(); }
+    async connect() {
+        if (this.connection.state === signalR.HubConnectionState.Disconnected)
+            await this.connection.start();
+    }
     async join(code, name) {
         await this.connection.invoke("JoinRoom", code, name);
     }

@@ -61,6 +61,7 @@ async function backToLobby() {
 }
 
 async function enterLobby() {
+    await net.connect();    // now we connect here with token
     showView('lobbyView');
     await populateLevels();
     await refreshRooms();
@@ -187,7 +188,7 @@ net.onGameStarted(() => showView('gameView'));      //everyone swaps to the game
 net.onLobbyChanged(() => refreshRooms());
 
 //await net.join(roomCode, playerName);
-await net.connect();    //open on load
+//await net.connect();    //open on load
 await sceneManager.loadCharacterTemplate('/assets/PirateCook.glb'); 
 //showView('loginView');  //land in login
 const { data: { session } } = await supabase.auth.getSession();
