@@ -99,13 +99,14 @@ public class Room
 
 
         //Clarifying comment: loop arms hazards
-        for (int i = 0; i < _level.Hazards.Count; i++)
-        {
-            var h = _level.Hazards[i];
-            var cycle = h.SafeMs + h.ArmedMs;
-            var t = _elapsedMs % cycle;
-            _trapArmed[i] = t >= h.SafeMs;          //safe then armed
-        }
+        TrapResolver.UpdateArmed(_level.Hazards, _elapsedMs, _trapArmed);
+        //for (int i = 0; i < _level.Hazards.Count; i++)
+        //{
+        //    var h = _level.Hazards[i];
+        //    var cycle = h.SafeMs + h.ArmedMs;
+        //    var t = _elapsedMs % cycle;
+        //    _trapArmed[i] = t >= h.SafeMs;          //safe then armed
+        //}
 
         //Triggers and doors
         for (int d = 0; d < _doors.Count; d++)
@@ -166,43 +167,53 @@ public class Room
         }
 
         //for each player, if they step inside the hazard, end the game as a loss
-        foreach (var p in _players.Values)
+        foreach(var p in _players.Values)
         {
-            for (int i =0; i< _level.Hazards.Count; i++)
+            if(TrapResolver.HitsArmed(p.X, p.Z, _level.Hazards, _trapArmed, Level.PlayerRadius))
             {
-                if (!_trapArmed[i]) continue;
-                var h = _level.Hazards[i];
-                float cx = MathF.Max(h.MinX, MathF.Min(p.X, h.MaxX));
-                float cz = MathF.Max(h.MinZ, MathF.Min(p.Z, h.MaxZ));
-                float dx = p.X - cx, dz = p.Z - cz;
-                if(dx * dx + dz * dz < Level.PlayerRadius * Level.PlayerRadius)
-                {
-                    State = GameState.Lost;
-                    return;
-                }
+                State = GameState.Lost;
+                return;     
             }
         }
+        //foreach (var p in _players.Values)
+        //{
+        //    for (int i =0; i< _level.Hazards.Count; i++)
+        //    {
+        //        if (!_trapArmed[i]) continue;
+        //        var h = _level.Hazards[i];
+        //        float cx = MathF.Max(h.MinX, MathF.Min(p.X, h.MaxX));
+        //        float cz = MathF.Max(h.MinZ, MathF.Min(p.Z, h.MaxZ));
+        //        float dx = p.X - cx, dz = p.Z - cz;
+        //        if(dx * dx + dz * dz < Level.PlayerRadius * Level.PlayerRadius)
+        //        {
+        //            State = GameState.Lost;
+        //            return;
+        //        }
+        //    }
+        //}
 
        
         //check for win conditions
         float reach = _level.Objective.Radius + Level.PlayerRadius;
-        foreach (var p in _players.Values)
-        {
-            //same as distance check in movement.js, this is checking collision math (sq distance vs radius)
-            // reach = prize + player radius, so toucing it counts. if state==playing is a guard to stay won
-            float dx = p.X - _level.Objective.X;
-            float dz = p.Z - _level.Objective.Z;
-            if(dx*dx + dz*dz < reach*reach)
-            {
-                State = GameState.Won;
+        if (CompletionPolicy.IsWon(_players.Values, _level.Objective, Level.PlayerRadius))
+            State = GameState.Won;
+        //foreach (var p in _players.Values)
+        //{
+        //    //same as distance check in movement.js, this is checking collision math (sq distance vs radius)
+        //    // reach = prize + player radius, so toucing it counts. if state==playing is a guard to stay won
+        //    float dx = p.X - _level.Objective.X;
+        //    float dz = p.Z - _level.Objective.Z;
+        //    if(dx*dx + dz*dz < reach*reach)
+        //    {
+        //        State = GameState.Won;
 
-                //Ai Code, Discard input that could be reused after Game Over
-                //_inputs.Clear();  //redundant
-                //End Ai Code
+        //        //Ai Code, Discard input that could be reused after Game Over
+        //        //_inputs.Clear();  //redundant
+        //        //End Ai Code
 
-                break;
-            }
-        }
+        //        break;
+        //    }
+        //}
     }
 
     private bool HitsAny(float x, float z)
